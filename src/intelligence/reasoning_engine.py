@@ -25,6 +25,8 @@ class ReasoningEngine:
 
     def analyze_and_sort(self, ocr_text: str, history_context: str) -> Dict[str, Any]:
         """Analysiert OCR-Text und liefert Summary, Dateiname und Zielordner."""
+        # Erzwinge das Umschalten auf das LLM, um VRAM sauber zu halten.
+        self._model_manager.switch_to("llm")
         messages = self._build_prompt(ocr_text, history_context)
         for attempt in range(2):
             response_text = self._run_inference(messages)

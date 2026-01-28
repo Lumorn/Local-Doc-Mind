@@ -50,13 +50,16 @@ class DocumentPipeline:
             raise RuntimeError(f"Backup-Integritaet fehlgeschlagen: {path.name}")
 
         logger.info("Starte OCR fuer Datei: %s", path.name)
+        # Auge auf: OCR liefert Markdown aus dem Dokument.
         engine = VisionEngine()
         markdown = engine.process_document(str(path))
         del engine
 
+        # Gedaechtnis: Kontext aus ChromaDB abrufen.
         memory = ContextMemory()
         history_context = memory.recall(markdown)
 
+        # Gehirn an: LLM analysiert und liefert JSON-Entscheidung.
         reasoning = ReasoningEngine()
         decision = reasoning.analyze_and_sort(markdown, history_context)
 
@@ -65,6 +68,7 @@ class DocumentPipeline:
         # Mockup: Datei auf Basis der LLM-Entscheidung verschieben.
         target_path = FileOperations.move(path, target_folder, target_filename)
 
+        # Lernen: neue Entscheidung im Langzeitgedaechtnis ablegen.
         memory.remember(
             target_filename,
             decision.get("folder", "Unsortiert"),

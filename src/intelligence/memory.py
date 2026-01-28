@@ -55,6 +55,9 @@ class ContextMemory:
 
     def recall(self, text_content: str, k: int = 3) -> str:
         """Liefert den aehnlichsten Kontext als String fuer das LLM."""
+        if not text_content.strip():
+            logger.debug("Leerer Textinhalt, keine Kontextsuche moeglich.")
+            return "Keine historischen Dokumente gefunden."
         if self._collection.count() == 0:
             return "Keine historischen Dokumente gefunden."
 
