@@ -62,6 +62,9 @@ class DocumentPipeline:
         # Gehirn an: LLM analysiert und liefert JSON-Entscheidung.
         reasoning = ReasoningEngine()
         decision = reasoning.analyze_and_sort(markdown, history_context)
+        if not isinstance(decision, dict):
+            logger.warning("Unerwartete LLM-Antwort, nutze Fallback-Ziele.")
+            decision = {"summary": "", "filename": path.name, "folder": "Unsortiert"}
 
         target_folder = self.output_root / decision.get("folder", "Unsortiert")
         target_filename = decision.get("filename", path.name)

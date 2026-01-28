@@ -2,6 +2,15 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.14] - 2025-10-12
+### Hinzugefuegt
+- ContextMemory validiert die Trefferanzahl und formatiert den Recall robust fuer das LLM.
+### Geaendert
+- ReasoningEngine bereinigt JSON-Ausgaben ueber eine zentrale Cleaning-Funktion.
+- DocumentPipeline faengt unerwartete LLM-Antworten mit einem Fallback ab.
+- ModelManager protokolliert das Zielmodell beim strikten Model-Swapping.
+- README dokumentiert die LLM-Schicht und den stabilen VRAM-Swap.
+
 ## [0.1.13] - 2025-10-11
 ### Hinzugefuegt
 - Kontext-Gedaechtnis betont die CPU-Embeddings fuer ChromaDB-Recall.

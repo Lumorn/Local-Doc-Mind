@@ -58,6 +58,9 @@ class ContextMemory:
         if not text_content.strip():
             logger.debug("Leerer Textinhalt, keine Kontextsuche moeglich.")
             return "Keine historischen Dokumente gefunden."
+        if k < 1:
+            logger.debug("Ungültiges k=%s, setze auf 1.", k)
+            k = 1
         if self._collection.count() == 0:
             return "Keine historischen Dokumente gefunden."
 
