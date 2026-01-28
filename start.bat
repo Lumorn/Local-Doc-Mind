@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Stellt sicher, dass wir im Projektordner arbeiten.
+cd /d "%~dp0"
+
 REM Pruefen, ob Python verfuegbar ist
 where python >nul 2>&1
 if errorlevel 1 (
@@ -62,7 +65,9 @@ REM Ordnerstruktur anlegen, falls nicht vorhanden
 mkdir input output backup models logs 2>nul
 
 REM Hauptprogramm starten
-python src\main.py
+REM Sorgt fuer einen stabilen Importpfad, egal von wo das Skript gestartet wird.
+set "PYTHONPATH=%~dp0"
+python -m src.main
 if errorlevel 1 (
     echo [FEHLER] Die Anwendung wurde mit einem Fehler beendet.
     pause
