@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.28] - 2025-10-26
+### Hinzugefuegt
+- Startpruefung installiert fehlende Abhaengigkeiten automatisch anhand der `requirements.txt`.
+- README dokumentiert die automatische Abhaengigkeitspruefung beim Start.
+
 ## [0.1.27] - 2025-10-25
 ### Behoben
 - Fehlermeldung fuer fehlendes `addict` verweist nun explizit auf `requirements.txt`.
