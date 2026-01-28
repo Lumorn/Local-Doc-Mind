@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.19] - 2025-10-17
+### Behoben
+- GUI-Imports werden erst nach dem PyQt6-Check geladen, damit fehlende Abhaengigkeiten sauber abgefangen werden.
+- README beschreibt den spaeteren GUI-Import nach dem PyQt6-Check.
+
 ## [0.1.18] - 2025-10-16
 ### Behoben
 - Die fehlende `ProcessingPipeline` wurde wiederhergestellt, damit GUI und Einstiegspunkt die Pipeline-Callbacks korrekt nutzen koennen.

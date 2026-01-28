@@ -19,8 +19,6 @@ for path in (PROJECT_ROOT, SRC_ROOT):
 from src.core.model_manager import ModelManager
 from src.core.pipeline import ProcessingPipeline
 from src.core.watcher import FileWatcher
-from src.gui.main_window import MainWindow, apply_dark_theme
-from src.gui.workers import PipelineWorker
 
 
 def load_settings(config_path: Path) -> dict:
@@ -42,6 +40,9 @@ def main() -> None:
         sys.exit(1)
 
     from PyQt6.QtWidgets import QApplication
+    # GUI-Imports erst nach dem PyQt6-Check, damit fehlende Abhaengigkeiten sauber abgefangen werden.
+    from src.gui.main_window import MainWindow, apply_dark_theme
+    from src.gui.workers import PipelineWorker
     config_path = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"
     settings = load_settings(config_path)
     settings["config_path"] = str(config_path)

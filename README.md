@@ -79,7 +79,7 @@ Die `ProcessingPipeline` im selben Modul verbindet Watcher-Queue und GUI: Sie li
 
 ## Einstiegspunkt
 
-`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden.
+`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden. Die GUI-Imports erfolgen erst nach dem PyQt6-Check, damit fehlende Abhaengigkeiten sauber mit einer Benutzerhinweis-Meldung abgefangen werden.
 
 ## Intelligence-Module
 
