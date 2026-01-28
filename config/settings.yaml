@@ -1,0 +1,13 @@
+app:
+  name: "Local-Doc-Mind"
+  version: "0.1.0"
+paths:
+  input: "./input"
+  output: "./output"
+  backup: "./backup"
+  logs: "./logs"
+models:
+  ocr_model: "deepseek-ai/DeepSeek-OCR-2"
+  reasoning_model: "Qwen/Qwen2.5-7B-Instruct-GGUF" # Platzhalter
+  use_4bit: true
+  device: "cuda"
