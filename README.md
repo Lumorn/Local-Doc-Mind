@@ -79,7 +79,7 @@ Die PDF-Aufbereitung in `src/utils/image_processing.py` rendert jede Seite mit e
 
 ## Vision-Engine
 
-`src/intelligence/vision_engine.py` kapselt den Zugriff auf DeepSeek-OCR-2. Die Klasse `VisionEngine` nutzt den `ModelManager`, bereitet den Prompt fuer Markdown-Extraktion vor und faengt CUDA-OOMs ab, indem der Cache bereinigt und die Inferenz erneut angestossen wird. Zusaetzlich wird die `infer`-Signatur flexibel behandelt, damit unterschiedliche DeepSeek-OCR-2 API-Varianten (z.B. `image` statt `images`) sauber funktionieren.
+`src/intelligence/vision_engine.py` kapselt den Zugriff auf DeepSeek-OCR-2. Die Klasse `VisionEngine` nutzt den `ModelManager`, bereitet den Prompt fuer Markdown-Extraktion vor und faengt CUDA-OOMs ab, indem der Cache bereinigt und die Inferenz erneut angestossen wird. Zusaetzlich wird die `infer`-Signatur flexibel behandelt, damit unterschiedliche DeepSeek-OCR-2 API-Varianten (z.B. `image` statt `images`) sauber funktionieren. Falls das Modell einen `output_path` oder `output_dir` verlangt, wird automatisch ein lokaler OCR-Cache-Ordner erstellt und uebergeben, um Windows-Pfadfehler zu vermeiden.
 
 ## Dokumentenpipeline (OCR-Orchestrator)
 

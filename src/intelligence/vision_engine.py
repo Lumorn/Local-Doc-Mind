@@ -5,6 +5,7 @@ from __future__ import annotations
 import gc
 import inspect
 import logging
+from pathlib import Path
 from typing import List
 
 import torch
@@ -26,6 +27,8 @@ class VisionEngine:
         self._model_manager = ModelManager.instance()
         self._model_id = model_id
         self._processor = AutoProcessor.from_pretrained(model_id)
+        # Standardordner fuer OCR-Outputs, falls das Modell einen Ablagepfad erwartet.
+        self._output_dir = Path("output") / "ocr_cache"
 
     def process_document(self, file_path: str) -> str:
         """Fuehrt OCR auf allen PDF-Seiten aus und liefert Markdown zurueck."""
@@ -88,6 +91,21 @@ class VisionEngine:
             torch.cuda.empty_cache()
         return "\n".join(text)
 
+    def _ensure_output_dir(self) -> Path:
+        """Stellt sicher, dass der OCR-Output-Ordner existiert."""
+        self._output_dir.mkdir(parents=True, exist_ok=True)
+        return self._output_dir
+
+    def _get_output_kwargs(self, parameters: List[str] | None) -> dict:
+        """Ermittelt optionale Output-Parameter fuer die Modell-Inferenz."""
+        if not parameters:
+            return {}
+        if "output_path" in parameters:
+            return {"output_path": str(self._ensure_output_dir())}
+        if "output_dir" in parameters:
+            return {"output_dir": str(self._ensure_output_dir())}
+        return {}
+
     def _call_model_infer(self, model: torch.nn.Module, image: Image.Image) -> object:
         """Ruft model.infer mit verschiedenen Signaturen auf, um API-Unterschiede abzufangen."""
         infer = model.infer
@@ -98,30 +116,35 @@ class VisionEngine:
 
         if signature is not None:
             parameters = [name for name in signature.parameters if name != "self"]
+            output_kwargs = self._get_output_kwargs(parameters)
             if "images" in parameters:
                 if "prompt" in parameters:
-                    return infer(prompt=_OCR_PROMPT, images=[image])
-                return infer(images=[image])
+                    return infer(prompt=_OCR_PROMPT, images=[image], **output_kwargs)
+                return infer(images=[image], **output_kwargs)
             if "image" in parameters:
                 if "prompt" in parameters:
-                    return infer(prompt=_OCR_PROMPT, image=image)
-                return infer(image=image)
+                    return infer(prompt=_OCR_PROMPT, image=image, **output_kwargs)
+                return infer(image=image, **output_kwargs)
             # Fallback: positionaler Aufruf (Prompt + Image) fuer aeltere Signaturen.
             if len(parameters) >= 2:
-                return infer(_OCR_PROMPT, image)
-            return infer(image)
+                return infer(_OCR_PROMPT, image, **output_kwargs)
+            return infer(image, **output_kwargs)
 
         # Letzter Rettungsanker, falls die Signatur nicht ermittelt werden kann.
+        output_kwargs = {"output_path": str(self._ensure_output_dir())}
         try:
-            return infer(_OCR_PROMPT, images=[image])
+            return infer(_OCR_PROMPT, images=[image], **output_kwargs)
         except TypeError:
             try:
-                return infer(prompt=_OCR_PROMPT, images=[image])
+                return infer(prompt=_OCR_PROMPT, images=[image], **output_kwargs)
             except TypeError:
                 try:
-                    return infer(_OCR_PROMPT, image)
+                    return infer(_OCR_PROMPT, image, **output_kwargs)
                 except TypeError:
-                    return infer(image)
+                    try:
+                        return infer(image, **output_kwargs)
+                    except TypeError:
+                        return infer(image)
 
     @staticmethod
     def _normalize_result(result: object) -> str:

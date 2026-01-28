@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.30] - 2025-10-28
+### Behoben
+- OCR-Inferenz uebergibt nun einen sicheren Output-Ordner, falls das Modell einen `output_path` oder `output_dir` erwartet.
+- README dokumentiert den automatischen OCR-Cache-Ordner fuer Modelle mit Output-Pfadpflicht.
+
 ## [0.1.29] - 2025-10-27
 ### Behoben
 - OCR-Inferenz erkennt nun unterschiedliche `infer`-Signaturen (z.B. `image` statt `images`) und faengt API-Abweichungen robust ab.
