@@ -2,6 +2,13 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.13] - 2025-10-11
+### Hinzugefuegt
+- Kontext-Gedaechtnis betont die CPU-Embeddings fuer ChromaDB-Recall.
+### Geaendert
+- ModelManager erzwingt durchgaengiges VRAM-Cleanup beim Modellwechsel.
+- README ergaenzt Details zum Memory-Embedding und Fallback-Parsing.
+
 ## [0.1.12] - 2025-10-10
 ### Hinzugefuegt
 - ContextMemory nutzt ChromaDB fuer Vektor-Recall und formatiert aehnliche Dokumente als LLM-Kontext.

@@ -59,7 +59,7 @@ Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offloa
 
 ## KI-Speichermanagement
 
-Der `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus. Fuer die Cognitive Layer wird das strikte Model-Swapping zwischen OCR und LLM erzwungen, inklusive sofortigem VRAM-Cleanup (gc + `torch.cuda.empty_cache()`), waehrend das MiniLM-Embedding-Modell dauerhaft auf der CPU verbleibt.
+Der `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus. Fuer die Cognitive Layer wird das strikte Model-Swapping zwischen OCR und LLM erzwungen, inklusive sofortigem VRAM-Cleanup (gc + `torch.cuda.empty_cache()`), waehrend das MiniLM-Embedding-Modell dauerhaft auf der CPU verbleibt und die ChromaDB-Memory-Schicht versorgt.
 
 ## Bildaufbereitung
 
@@ -79,7 +79,7 @@ Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-o
 
 ## Intelligence-Module
 
-Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2 (gekapselt in `vision_engine.py`), ein Stapel-Scanner zum Erkennen von Dokumentgrenzen, das `ContextMemory` fuer persistenten Namenskontext (ChromaDB + MiniLM) sowie der `ReasoningEngine`, der Qwen2.5 fuer Zusammenfassung, Dateinamen und Zielordner nutzt. Die Memory-Schicht formatiert aehnliche Dokumente als LLM-tauglichen Kontext und speichert neue Entscheidungen als Vektoren. Der Reasoning-Output wird robust geparst, um JSON in Markdown-Fences zu bereinigen.
+Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2 (gekapselt in `vision_engine.py`), ein Stapel-Scanner zum Erkennen von Dokumentgrenzen, das `ContextMemory` fuer persistenten Namenskontext (ChromaDB + MiniLM) sowie der `ReasoningEngine`, der Qwen2.5 fuer Zusammenfassung, Dateinamen und Zielordner nutzt. Die Memory-Schicht formatiert aehnliche Dokumente als LLM-tauglichen Kontext und speichert neue Entscheidungen als Vektoren. Der Reasoning-Output wird robust geparst, um JSON in Markdown-Fences zu bereinigen und liefert bei Bedarf Fallback-Antworten.
 
 ## GUI-Dashboard
 
