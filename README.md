@@ -88,3 +88,5 @@ Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse m
 ## GUI-Dashboard
 
 Das GUI-Paket unter `src/gui/` liefert ein modernes Dashboard mit Dateibaum, Scan-Ansicht und Matrix-Logfenster. Die `PipelineWorker`-Klasse verbindet die Processing-Pipeline ueber Qt-Signale mit der Benutzeroberflaeche, waehrend `ScanView` halbtransparente Bounding-Boxen fuer visuelle KI-Overlays zeichnet.
+
+Das Hauptfenster verwendet nach Moeglichkeit `QFileSystemModel` fuer den Dateibaum und weicht bei inkompatiblen PyQt6-Builds automatisch auf ein internes Standardmodell aus, damit der Dateibaum auch ohne `QFileSystemModel` angezeigt wird.

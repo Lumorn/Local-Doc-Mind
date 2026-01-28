@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.21] - 2025-10-19
+### Behoben
+- Dateibaum faellt auf ein internes Modell zurueck, wenn `QFileSystemModel` in PyQt6 nicht verfuegbar ist.
+- README dokumentiert das automatische Dateibaum-Fallback.
+
 ## [0.1.20] - 2025-10-18
 ### Behoben
 - `start.bat` installiert fehlende Abhaengigkeiten nach, wenn eine bestehende virtuelle Umgebung PyQt6 nicht enthaelt.
