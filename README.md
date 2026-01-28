@@ -66,6 +66,8 @@ Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offloa
 
 Der `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus. Fuer die Cognitive Layer wird das strikte Model-Swapping zwischen OCR und LLM erzwungen, inklusive sofortigem VRAM-Cleanup (gc + `torch.cuda.empty_cache()`), waehrend das MiniLM-Embedding-Modell dauerhaft auf der CPU verbleibt und die ChromaDB-Memory-Schicht versorgt.
 
+Beim Laden von DeepSeek-OCR-2 wird `trust_remote_code=True` gesetzt, damit das Modell seinen notwendigen benutzerdefinierten Code ausfuehren kann.
+
 Die LLM-Schicht nutzt Qwen2.5-7B-Instruct in 4-bit-Quantisierung, wodurch das Modell sauber mit dem OCR-Gewicht getauscht werden kann. Dadurch bleibt der VRAM-Bedarf stabil, waehrend das Embedding-Modell permanent auf der CPU aktiv ist.
 
 ## Bildaufbereitung
