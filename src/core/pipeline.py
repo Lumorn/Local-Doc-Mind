@@ -13,10 +13,13 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
+import torch
+
 from src.core.context import ContextManager
 from src.intelligence.analyzer import analyze_document
 from src.intelligence.naming import NamingEngine
 from src.intelligence.splitter import scan_for_splits
+from src.intelligence.vision_engine import VisionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -269,6 +272,66 @@ class ProcessingPipeline(threading.Thread):
         handler = self.callbacks.get("file_processed")
         if handler:
             handler(file_path)
+
+
+class DocumentPipeline:
+    """Orchestriert die Verarbeitung einzelner Dateien ueber OCR und Export."""
+
+    def __init__(
+        self,
+        vision_engine: VisionEngine | None = None,
+        backup_root: Path | None = None,
+        output_root: Path | None = None,
+    ) -> None:
+        # Standardpfade vorbereiten, um sofort schreiben zu koennen.
+        self.backup_root = backup_root or Path("/backup")
+        self.output_root = output_root or Path("/output")
+        self.vision_engine = vision_engine or VisionEngine()
+
+    def process(self, file_path: str) -> Path:
+        """Verarbeitet ein PDF und schreibt ein Markdown-Ergebnis in den Output."""
+        source_path = Path(file_path)
+        if not source_path.exists():
+            raise FileNotFoundError(f"Datei nicht gefunden: {source_path}")
+        if source_path.suffix.lower() != ".pdf":
+            raise ValueError("Ungueltiger Dateityp: erwartet PDF.")
+
+        logger.info("Starte Verarbeitung fuer %s", source_path)
+        backup_path = self._create_backup(source_path)
+        if not self._verify_backup(source_path, backup_path):
+            raise ValueError("Backup-Integritaet fehlgeschlagen.")
+
+        logger.info("Starte OCR fuer Datei %s", source_path.name)
+        markdown = self.vision_engine.process_document(str(source_path))
+
+        self.output_root.mkdir(parents=True, exist_ok=True)
+        output_path = self.output_root / f"{source_path.stem}.md"
+        output_path.write_text(markdown, encoding="utf-8")
+        logger.info("Markdown gespeichert unter %s", output_path)
+
+        # Nach der Verarbeitung GPU-Speicher freigeben.
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        return output_path
+
+    def _create_backup(self, file_path: Path) -> Path:
+        """Erstellt ein Backup der Datei im datierten Ordner.""" 
+        date_folder = self.backup_root / date.today().isoformat()
+        date_folder.mkdir(parents=True, exist_ok=True)
+        backup_path = date_folder / file_path.name
+        logger.info("Backup wird erstellt in %s", backup_path)
+        shutil.copy2(file_path, backup_path)
+        logger.info("Backup abgeschlossen fuer %s", file_path.name)
+        return backup_path
+
+    def _verify_backup(self, source_path: Path, backup_path: Path) -> bool:
+        """Prueft die Integritaet des Backups via SHA256."""
+        source_hash = _calculate_sha256(source_path)
+        backup_hash = _calculate_sha256(backup_path)
+        logger.debug("SHA256 Quelle: %s", source_hash)
+        logger.debug("SHA256 Backup: %s", backup_hash)
+        return source_hash == backup_hash
 
 
 def _calculate_sha256(path: Path, chunk_size: int = 1024 * 1024) -> str:
