@@ -62,6 +62,8 @@ Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offloa
 
 `requirements.txt` enthaelt nur die Projektpakete (inklusive PyQt6 fuer die GUI) ohne CUDA-Index-URLs und ohne `flash-attn`. Die CUDA-Variante von PyTorch wird ausschliesslich ueber das Bootstrapper-Skript installiert, damit Windows-Installationen stabil bleiben.
 
+Fuer DeepSeek-OCR-2 wird zusaetzlich `addict` benoetigt, weil der Remote-Code des Modells auf diese Bibliothek zugreift. Die Abhaengigkeit ist daher in `requirements.txt` aufgenommen.
+
 ## KI-Speichermanagement
 
 Der `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus. Fuer die Cognitive Layer wird das strikte Model-Swapping zwischen OCR und LLM erzwungen, inklusive sofortigem VRAM-Cleanup (gc + `torch.cuda.empty_cache()`), waehrend das MiniLM-Embedding-Modell dauerhaft auf der CPU verbleibt und die ChromaDB-Memory-Schicht versorgt.
