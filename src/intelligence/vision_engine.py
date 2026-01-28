@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gc
+import inspect
 import logging
 from typing import List
 
@@ -69,10 +70,7 @@ class VisionEngine:
         model = self._model_manager.load_model(self._model_id)
 
         if hasattr(model, "infer"):
-            try:
-                result = model.infer(_OCR_PROMPT, images=[image])
-            except TypeError:
-                result = model.infer(prompt=_OCR_PROMPT, images=[image])
+            result = self._call_model_infer(model, image)
             return self._normalize_result(result)
 
         inputs = self._processor(text=_OCR_PROMPT, images=image, return_tensors="pt")
@@ -89,6 +87,41 @@ class VisionEngine:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         return "\n".join(text)
+
+    def _call_model_infer(self, model: torch.nn.Module, image: Image.Image) -> object:
+        """Ruft model.infer mit verschiedenen Signaturen auf, um API-Unterschiede abzufangen."""
+        infer = model.infer
+        try:
+            signature = inspect.signature(infer)
+        except (TypeError, ValueError):
+            signature = None
+
+        if signature is not None:
+            parameters = [name for name in signature.parameters if name != "self"]
+            if "images" in parameters:
+                if "prompt" in parameters:
+                    return infer(prompt=_OCR_PROMPT, images=[image])
+                return infer(images=[image])
+            if "image" in parameters:
+                if "prompt" in parameters:
+                    return infer(prompt=_OCR_PROMPT, image=image)
+                return infer(image=image)
+            # Fallback: positionaler Aufruf (Prompt + Image) fuer aeltere Signaturen.
+            if len(parameters) >= 2:
+                return infer(_OCR_PROMPT, image)
+            return infer(image)
+
+        # Letzter Rettungsanker, falls die Signatur nicht ermittelt werden kann.
+        try:
+            return infer(_OCR_PROMPT, images=[image])
+        except TypeError:
+            try:
+                return infer(prompt=_OCR_PROMPT, images=[image])
+            except TypeError:
+                try:
+                    return infer(_OCR_PROMPT, image)
+                except TypeError:
+                    return infer(image)
 
     @staticmethod
     def _normalize_result(result: object) -> str:

@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.29] - 2025-10-27
+### Behoben
+- OCR-Inferenz erkennt nun unterschiedliche `infer`-Signaturen (z.B. `image` statt `images`) und faengt API-Abweichungen robust ab.
+- README dokumentiert die flexible `infer`-Signatur fuer DeepSeek-OCR-2.
+
 ## [0.1.28] - 2025-10-26
 ### Hinzugefuegt
 - Startpruefung installiert fehlende Abhaengigkeiten automatisch anhand der `requirements.txt`.
