@@ -142,6 +142,7 @@ class ModelManager:
     def _load_ocr_model(self) -> torch.nn.Module:
         """Laedt DeepSeek-OCR-2 mit speichersparenden Einstellungen."""
         model_id = self.model_ids["ocr"]
+        self._ensure_ocr_dependencies()
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
@@ -168,6 +169,16 @@ class ModelManager:
         )
         self.models[model_id] = model
         return model
+
+    @staticmethod
+    def _ensure_ocr_dependencies() -> None:
+        """Prueft, ob DeepSeek-OCR-2 notwendige Zusatzpakete installiert sind."""
+        # Hinweis: DeepSeek-OCR-2 nutzt Remote-Code, der auf "addict" basiert.
+        if importlib.util.find_spec("addict") is None:
+            raise RuntimeError(
+                "Das OCR-Modell benoetigt das Paket 'addict'. Bitte installieren Sie es "
+                "mit 'pip install addict' und starten Sie die Anwendung erneut."
+            )
 
     def _load_llm_model(self) -> torch.nn.Module:
         """Laedt Qwen2.5-7B-Instruct in 4-bit fuer die Reasoning-Schicht."""

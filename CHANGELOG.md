@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.26] - 2025-10-24
+### Behoben
+- OCR-Model-Ladevorgang prueft jetzt vorab auf das Paket `addict` und meldet fehlende Abhaengigkeiten mit einer klaren Fehlermeldung.
+- README dokumentiert die neue Abhaengigkeitspruefung fuer DeepSeek-OCR-2.
+
 ## [0.1.25] - 2025-10-23
 ### Behoben
 - Abhaengigkeit `addict` fuer DeepSeek-OCR-2 in `requirements.txt` aufgenommen.
