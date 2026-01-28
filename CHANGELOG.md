@@ -20,3 +20,8 @@ Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokument
 ### Hinzugefuegt
 - Dateiueberwachung mit Debouncing fuer fertige PDF-Dateien im Eingangsordner.
 - Processing-Pipeline mit Backup-First-Strategie, SHA256-Integritaetscheck und Verschiebung in einen Processing-Ordner.
+
+## [0.1.3] - 2025-10-01
+### Hinzugefuegt
+- Neue Intelligence-Module fuer OCR-Analyse, Stapel-Splitting und RAG-basierte Dateibenennung.
+- Erweiterungen am ModelManager fuer eine konsistente Nutzung ueber die neuen Module hinweg.

@@ -21,6 +21,11 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses 
 │       ├── model_manager.py
 │       ├── watcher.py
 │       └── pipeline.py
+│   └── intelligence/
+│       ├── __init__.py
+│       ├── analyzer.py
+│       ├── splitter.py
+│       └── naming.py
 ├── requirements.txt
 └── start.bat
 ```
@@ -42,3 +47,7 @@ Der neue `ModelManager` in `src/core/model_manager.py` laedt OCR-, Embedding- un
 ## Dateiueberwachung & Processing-Pipeline
 
 Das Modul `src/core/watcher.py` ueberwacht den Eingangsordner rekursiv und legt nur fertig geschriebene PDF-Dateien in eine Queue. Die neue `ProcessingPipeline` in `src/core/pipeline.py` nimmt diese Aufgaben entgegen, erstellt zuerst ein datiertes Backup (mit SHA256-Integritaetscheck) und verschiebt die Datei danach in einen internen Processing-Ordner. So bleibt der Input-Ordner sauber, bevor eine KI die Datei verarbeitet.
+
+## Intelligence-Module
+
+Die neuen Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2, ein Stapel-Scanner zum Erkennen von Dokumentgrenzen sowie eine RAG-gestuetzte Namensvergabe auf Basis von ChromaDB und einem Reasoning-LLM.
