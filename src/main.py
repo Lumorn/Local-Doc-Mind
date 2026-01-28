@@ -1,6 +1,19 @@
+"""Startpunkt fuer Local-Doc-Mind."""
+
+from __future__ import annotations
+
+import queue
+import sys
 from pathlib import Path
 
 import yaml
+from PyQt6.QtWidgets import QApplication
+
+from src.core.model_manager import ModelManager
+from src.core.pipeline import ProcessingPipeline
+from src.core.watcher import FileWatcher
+from src.gui.main_window import MainWindow, apply_dark_theme
+from src.gui.workers import PipelineWorker
 
 
 def load_settings(config_path: Path) -> dict:
@@ -15,15 +28,56 @@ def load_settings(config_path: Path) -> dict:
 
 
 def main() -> None:
-    # Standardpfad zur Konfiguration ermitteln.
+    """Startet die GUI samt Watcher und Processing-Pipeline."""
     config_path = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"
     settings = load_settings(config_path)
+    settings["config_path"] = str(config_path)
+    settings["queue"] = queue.Queue()
 
-    # Ein kurzer Statushinweis fuer den Start.
-    app_name = settings.get("app", {}).get("name", "Local-Doc-Mind")
-    app_version = settings.get("app", {}).get("version", "0.1.0")
-    print(f"{app_name} v{app_version} wird gestartet...")
-    print("System initialized.")
+    app = QApplication(sys.argv)
+    apply_dark_theme(app)
+
+    model_manager = ModelManager.instance()
+    _ = model_manager.get_device()
+
+    window = MainWindow(settings)
+    pipeline = ProcessingPipeline(settings, model_manager)
+    worker = PipelineWorker(pipeline)
+    watcher = FileWatcher(settings.get("paths", {}).get("input", "./input"), settings["queue"])
+
+    window.attach_worker(worker)
+
+    watcher_started = {"value": False}
+
+    def start_processing() -> None:
+        # Startet Watcher und Pipeline-Thread.
+        if not watcher_started["value"]:
+            watcher.start()
+            watcher_started["value"] = True
+        if not worker.isRunning():
+            worker.start()
+        window.append_log("Watchdog gestartet und Pipeline laeuft.")
+
+    def stop_processing() -> None:
+        # Stoppt Watcher und Pipeline-Thread.
+        if watcher_started["value"]:
+            watcher.stop()
+            watcher_started["value"] = False
+        if worker.isRunning():
+            worker.stop()
+            worker.wait(2000)
+        window.append_log("Watchdog und Pipeline gestoppt.")
+
+    window.start_watchdog_requested.connect(start_processing)
+    window.stop_watchdog_requested.connect(stop_processing)
+
+    def shutdown() -> None:
+        # Sorgt fuer ein sauberes Herunterfahren aller Threads.
+        stop_processing()
+
+    app.aboutToQuit.connect(shutdown)
+    window.show()
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

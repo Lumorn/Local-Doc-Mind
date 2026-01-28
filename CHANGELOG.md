@@ -31,3 +31,9 @@ Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokument
 - GUI-Dashboard mit Dateibaum, Scan-Ansicht und Matrix-Logfenster.
 - `PipelineWorker` fuer die Qt-Thread-Integration inkl. Signal-Bridge.
 - Callback-Unterstuetzung in der Processing-Pipeline fuer GUI-Updates.
+
+## [0.1.5] - 2025-10-03
+### Hinzugefuegt
+- Langzeit-Kontextmodul `ContextManager` mit `.ai_context.md` pro Ordner.
+- Vollstaendiger Pipeline-Workflow mit Split-Scan, OCR, Kontextabruf, Benennung und finaler Ablage.
+- Neuer GUI-Einstiegspunkt, der Config, ModelManager, Watcher und Pipeline sauber verbindet.
