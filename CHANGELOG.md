@@ -2,6 +2,13 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.15] - 2025-10-13
+### Hinzugefuegt
+- PyQt6 als explizite Abhaengigkeit fuer die GUI aufgenommen.
+### Geaendert
+- Startpunkt prueft PyQt6 vor dem GUI-Start und gibt eine klare Installationsmeldung aus.
+- README dokumentiert die PyQt6-Abhaengigkeit im Schnellstart und den Windows-Abhaengigkeiten.
+
 ## [0.1.14] - 2025-10-12
 ### Hinzugefuegt
 - ContextMemory validiert die Trefferanzahl und formatiert den Recall robust fuer das LLM.

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import importlib.util
 import queue
 import sys
 from pathlib import Path
 
 import yaml
-from PyQt6.QtWidgets import QApplication
 
 from src.core.model_manager import ModelManager
 from src.core.pipeline import ProcessingPipeline
@@ -29,6 +29,12 @@ def load_settings(config_path: Path) -> dict:
 
 def main() -> None:
     """Startet die GUI samt Watcher und Processing-Pipeline."""
+    # Prueft, ob PyQt6 installiert ist, damit die Anwendung eine klare Meldung ausgeben kann.
+    if importlib.util.find_spec("PyQt6") is None:
+        print("PyQt6 ist nicht installiert. Bitte installiere es mit: pip install PyQt6")
+        sys.exit(1)
+
+    from PyQt6.QtWidgets import QApplication
     config_path = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"
     settings = load_settings(config_path)
     settings["config_path"] = str(config_path)
