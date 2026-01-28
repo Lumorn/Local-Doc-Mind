@@ -21,6 +21,7 @@ transformers
 accelerate
 bitsandbytes
 einops  # Wichtig für DeepSeek-Architektur
+sentence-transformers
 
 # Vector Database
 chromadb

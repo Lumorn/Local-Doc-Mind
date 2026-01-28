@@ -29,3 +29,7 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses 
 ## Konfiguration
 
 Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind Pfade, Modell-IDs sowie grundlegende App-Informationen hinterlegt.
+
+## KI-Speichermanagement
+
+Der neue `ModelManager` in `src/core/model_manager.py` laedt OCR-, Embedding- und LLM-Modelle erst bei Bedarf und entlaedt sie wieder, wenn der VRAM knapp wird. Damit werden nie alle Modelle gleichzeitig im Grafikspeicher gehalten. Die Klasse nutzt 4-bit-Quantisierung, um den Speicherverbrauch zu minimieren.
