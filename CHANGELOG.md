@@ -15,3 +15,8 @@ Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokument
 - ModelManager fuer Lazy-Loading, VRAM-Checks und 4-bit-Quantisierung der Modelle.
 - Neues Core-Paket `src/core` als Ablage fuer zentrale Logik.
 - Abhaengigkeit `sentence-transformers` fuer Embedding-Modelle.
+
+## [0.1.2] - 2025-09-29
+### Hinzugefuegt
+- Dateiueberwachung mit Debouncing fuer fertige PDF-Dateien im Eingangsordner.
+- Processing-Pipeline mit Backup-First-Strategie, SHA256-Integritaetscheck und Verschiebung in einen Processing-Ordner.
