@@ -5,12 +5,19 @@ from __future__ import annotations
 from pathlib import Path
 
 from PIL import Image
+from PyQt6 import QtWidgets
 from PyQt6.QtCore import QDir, Qt, QUrl, pyqtSignal
-from PyQt6.QtGui import QAction, QColor, QDesktopServices, QPalette
+from PyQt6.QtGui import (
+    QAction,
+    QColor,
+    QDesktopServices,
+    QPalette,
+    QStandardItem,
+    QStandardItemModel,
+)
 from PyQt6.QtWidgets import (
     QApplication,
     QFileDialog,
-    QFileSystemModel,
     QMainWindow,
     QSplitter,
     QTextEdit,
@@ -56,11 +63,9 @@ class MainWindow(QMainWindow):
         self.resize(1280, 720)
 
         self.tree_view = QTreeView(self)
-        self.file_model = QFileSystemModel(self)
-        self.file_model.setFilter(QDir.Filter.AllDirs | QDir.Filter.Files | QDir.Filter.NoDotAndDotDot)
-        self.file_model.setRootPath(self.output_path)
+        self.file_model = self._create_file_model()
         self.tree_view.setModel(self.file_model)
-        self.tree_view.setRootIndex(self.file_model.index(self.output_path))
+        self._apply_tree_root()
         self.tree_view.setHeaderHidden(False)
 
         self.scan_view = ScanView(self)
@@ -118,8 +123,9 @@ class MainWindow(QMainWindow):
 
     def _refresh_tree(self, _path: str | None = None) -> None:
         """Aktualisiert den Dateibaum fuer neue Inhalte."""
-        self.file_model.setRootPath(self.output_path)
-        self.tree_view.setRootIndex(self.file_model.index(self.output_path))
+        self.file_model = self._create_file_model()
+        self.tree_view.setModel(self.file_model)
+        self._apply_tree_root()
 
     def _open_config(self) -> None:
         """Oeffnet die Konfiguration oder laesst eine Datei auswaehlen."""
@@ -136,3 +142,45 @@ class MainWindow(QMainWindow):
         )
         if selected:
             QDesktopServices.openUrl(QUrl.fromLocalFile(selected))
+
+    def _create_file_model(self):
+        """Erzeugt ein Dateimodell mit kompatibler Fallback-Logik."""
+        model_class = getattr(QtWidgets, "QFileSystemModel", None)
+        if model_class is None:
+            model_class = getattr(QtWidgets, "QDirModel", None)
+
+        if model_class is None:
+            return self._build_fallback_model()
+
+        model = model_class(self)
+        if hasattr(model, "setFilter"):
+            model.setFilter(QDir.Filter.AllDirs | QDir.Filter.Files | QDir.Filter.NoDotAndDotDot)
+        if hasattr(model, "setRootPath"):
+            model.setRootPath(self.output_path)
+        return model
+
+    def _apply_tree_root(self) -> None:
+        """Setzt den Root-Knoten fuer den Dateibaum."""
+        if hasattr(self.file_model, "index"):
+            self.tree_view.setRootIndex(self.file_model.index(self.output_path))
+
+    def _build_fallback_model(self) -> QStandardItemModel:
+        """Baut ein einfaches Modell, falls kein Qt-Dateimodell verfuegbar ist."""
+        model = QStandardItemModel(self)
+        model.setHorizontalHeaderLabels(["Dateien"])
+        root_item = QStandardItem(Path(self.output_path).name or self.output_path)
+        root_item.setEditable(False)
+        model.appendRow(root_item)
+        self._populate_tree(root_item, Path(self.output_path))
+        return model
+
+    def _populate_tree(self, parent_item: QStandardItem, directory: Path) -> None:
+        """Fuegt rekursiv Unterordner und Dateien zum Fallback-Modell hinzu."""
+        if not directory.exists():
+            return
+        for entry in sorted(directory.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
+            item = QStandardItem(entry.name)
+            item.setEditable(False)
+            parent_item.appendRow(item)
+            if entry.is_dir():
+                self._populate_tree(item, entry)
