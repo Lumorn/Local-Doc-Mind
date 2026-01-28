@@ -2,6 +2,15 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.10] - 2025-10-08
+### Hinzugefuegt
+- Dauerhaftes CPU-Embedding-Modell (MiniLM) fuer die Cognitive Layer.
+- ChromaDB-Gedaechtnis mit Vektor-Embeddings inkl. Kontextformatierung fuer das LLM.
+- Fallback-Logik im ReasoningEngine, falls JSON-Parsing fehlschlaegt.
+### Geaendert
+- ModelManager erzwingt striktes OCR/LLM-Swapping mit sofortigem VRAM-Cleanup.
+- DocumentPipeline speichert und nutzt historisches Gedachtnis fuer die Ablageentscheidung.
+
 ## [0.1.9] - 2025-10-07
 ### Hinzugefuegt
 - Striktes Model-Swapping fuer OCR und LLM im ModelManager inkl. 4-bit Qwen2.5-Loading.

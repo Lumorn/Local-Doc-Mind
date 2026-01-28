@@ -7,7 +7,9 @@ from typing import List
 from uuid import uuid4
 
 import chromadb
-from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+from sentence_transformers import SentenceTransformer
+
+from src.core.model_manager import ModelManager
 
 logger = logging.getLogger(__name__)
 
@@ -17,46 +19,62 @@ class ContextMemory:
 
     def __init__(self, path: str = "./chroma_db", collection_name: str = "document_memory") -> None:
         self._client = chromadb.PersistentClient(path=path)
-        self._embedding_function = SentenceTransformerEmbeddingFunction(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            device="cpu",
-        )
         self._collection = self._client.get_or_create_collection(
             name=collection_name,
-            embedding_function=self._embedding_function,
         )
+        self._embedding_model = self._load_embedding_model()
 
-    def remember(self, filename: str, text_summary: str) -> None:
+    def _load_embedding_model(self) -> SentenceTransformer:
+        """Laedt das Embedding-Modell ueber den ModelManager oder lokal."""
+        manager = ModelManager.instance()
+        embedding_model = manager.get_embedding_model()
+        if embedding_model is None:
+            logger.warning("Embedding-Modell fehlte im Manager, lade lokal.")
+            return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
+        return embedding_model
+
+    def _embed_texts(self, texts: List[str]) -> List[List[float]]:
+        """Erstellt Embeddings fuer eine Liste von Texten."""
+        embeddings = self._embedding_model.encode(texts, normalize_embeddings=True)
+        return [embedding.tolist() for embedding in embeddings]
+
+    def remember(self, filename: str, folder: str, text_summary: str) -> None:
         """Speichert eine neue Datei-Zusammenfassung als Vektor."""
+        if not text_summary.strip():
+            logger.debug("Leere Zusammenfassung, Kontext wird nicht gespeichert.")
+            return
         document_id = str(uuid4())
         logger.debug("Speichere Kontext fuer %s mit ID %s.", filename, document_id)
+        embedding = self._embed_texts([text_summary])[0]
         self._collection.add(
             ids=[document_id],
             documents=[text_summary],
-            metadatas=[{"filename": filename}],
+            embeddings=[embedding],
+            metadatas=[{"filename": filename, "folder": folder}],
         )
 
-    def recall(self, text_summary: str, k: int = 3) -> List[dict]:
-        """Liefert die aehnlichsten Dokumente zurueck."""
+    def recall(self, text_content: str, k: int = 3) -> str:
+        """Liefert den aehnlichsten Kontext als String fuer das LLM."""
         if self._collection.count() == 0:
-            return []
+            return "Keine historischen Dokumente gefunden."
 
+        query_embedding = self._embed_texts([text_content])[0]
         result = self._collection.query(
-            query_texts=[text_summary],
+            query_embeddings=[query_embedding],
             n_results=k,
             include=["documents", "metadatas", "distances"],
         )
         documents = result.get("documents", [[]])[0]
         metadatas = result.get("metadatas", [[]])[0]
-        distances = result.get("distances", [[]])[0]
+        if not documents:
+            return "Keine historischen Dokumente gefunden."
 
-        history = []
-        for doc, meta, distance in zip(documents, metadatas, distances):
-            history.append(
-                {
-                    "summary": doc,
-                    "filename": (meta or {}).get("filename", "unbekannt"),
-                    "distance": distance,
-                }
+        history_lines = []
+        for index, (doc, meta) in enumerate(zip(documents, metadatas), start=1):
+            filename = (meta or {}).get("filename", "unbekannt")
+            folder = (meta or {}).get("folder", "Unbekannt")
+            history_lines.append(
+                f"Aehnliches Dokument {index}: Abgelegt unter '{folder}' als '{filename}'. "
+                f"Zusammenfassung: {doc}"
             )
-        return history
+        return "\n".join(history_lines)
