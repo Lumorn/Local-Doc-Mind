@@ -101,17 +101,19 @@ class ReasoningEngine:
 
     def _parse_json(self, response_text: str) -> Dict[str, Any]:
         """Parst das JSON aus der LLM-Antwort robust mit Markdown-Strip."""
-        cleaned = response_text.strip()
+        cleaned = self._clean_json_text(response_text)
+        return json.loads(cleaned)
 
+    def _clean_json_text(self, response_text: str) -> str:
+        """Entfernt Markdown-Fences und Rauschen, bevor JSON geparst wird."""
+        cleaned = response_text.strip()
         fenced_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, re.DOTALL)
         if fenced_match:
-            cleaned = fenced_match.group(1).strip()
-        else:
-            brace_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
-            if brace_match:
-                cleaned = brace_match.group(0).strip()
-
-        return json.loads(cleaned)
+            return fenced_match.group(1).strip()
+        brace_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if brace_match:
+            return brace_match.group(0).strip()
+        return cleaned
 
     def _fallback_decision(self, ocr_text: str) -> Dict[str, Any]:
         """Erzeugt eine konservative Fallback-Antwort, falls das LLM scheitert."""

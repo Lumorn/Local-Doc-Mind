@@ -85,6 +85,7 @@ class ModelManager:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+        logger.info("Lade Zielmodell fuer Typ %s.", model_type)
         if model_type == "ocr":
             model = self._load_ocr_model()
         else:
