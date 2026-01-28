@@ -75,18 +75,15 @@ class ModelManager:
                 torch.cuda.empty_cache()
 
         # Sicherheitsnetz: falls noch andere OCR/LLM-Modelle gecacht sind, sofort entfernen.
-        removed_cached = False
         for cached_type in ("ocr", "llm"):
             model_id = self.model_ids.get(cached_type)
             if model_id and model_id in self.models:
                 logger.debug("Entferne Modell-Cache %s fuer striktes Swapping.", model_id)
                 self.models.pop(model_id, None)
-                removed_cached = True
 
-        if removed_cached:
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         if model_type == "ocr":
             model = self._load_ocr_model()
