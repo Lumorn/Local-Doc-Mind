@@ -1,0 +1,26 @@
+# GUI
+PyQt6
+
+# System & Files
+watchdog
+pyyaml
+# shutil ist Teil der Standardbibliothek und wird hier nicht gelistet.
+
+# PDF & Image Processing
+pymupdf
+pillow
+
+# AI & Machine Learning Backend
+# Für CUDA-Unterstützung kann ein Extra-Index nötig sein, z. B.:
+# --extra-index-url https://download.pytorch.org/whl/cu121
+# (Version und CUDA-Variante je nach System anpassen.)
+torch
+torchvision
+torchaudio
+transformers
+accelerate
+bitsandbytes
+einops  # Wichtig für DeepSeek-Architektur
+
+# Vector Database
+chromadb
