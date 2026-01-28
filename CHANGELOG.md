@@ -2,6 +2,13 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.31] - 2025-10-29
+### Behoben
+- OCR-Engine ruft `infer` jetzt immer mit Keyword-Argumenten und einer `images`-Liste auf, inklusive klarer Fehlermeldung bei falschen Typen.
+- PDF-zu-Bild-Verarbeitung streamt Seiten als Generator, um RAM-Explosionen bei mehrseitigen PDFs zu vermeiden.
+- OCR-Verarbeitung raeumt nach jeder Seite gezielt Speicher (RAM/VRAM) auf und protokolliert Debug-Infos zu den Payload-Typen.
+- README dokumentiert die gestreamte PDF-Verarbeitung und den neuen `infer`-Aufruf.
+
 ## [0.1.30] - 2025-10-28
 ### Behoben
 - OCR-Inferenz uebergibt nun einen sicheren Output-Ordner, falls das Modell einen `output_path` oder `output_dir` erwartet.
