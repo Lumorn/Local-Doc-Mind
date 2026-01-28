@@ -36,7 +36,10 @@ def main() -> None:
     """Startet die GUI samt Watcher und Processing-Pipeline."""
     # Prueft, ob PyQt6 installiert ist, damit die Anwendung eine klare Meldung ausgeben kann.
     if importlib.util.find_spec("PyQt6") is None:
-        print("PyQt6 ist nicht installiert. Bitte installiere es mit: pip install PyQt6")
+        print(
+            "PyQt6 ist nicht installiert. Bitte installiere es mit: "
+            "pip install -r requirements.txt oder starte unter Windows start.bat."
+        )
         sys.exit(1)
 
     from PyQt6.QtWidgets import QApplication
