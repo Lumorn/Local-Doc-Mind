@@ -59,6 +59,18 @@ if not exist ".venv" (
         pause
         exit /b 1
     )
+
+    REM Pruefen, ob PyQt6 vorhanden ist und bei Bedarf Abhaengigkeiten nachinstallieren.
+    python -c "import importlib.util; import sys; sys.exit(0 if importlib.util.find_spec('PyQt6') else 1)" >nul 2>&1
+    if errorlevel 1 (
+        echo [INFO] PyQt6 fehlt. Installiere Projekt-Abhaengigkeiten...
+        pip install -r requirements.txt
+        if errorlevel 1 (
+            echo [FEHLER] Konnte Abhaengigkeiten nicht installieren.
+            pause
+            exit /b 1
+        )
+    )
 )
 
 REM Ordnerstruktur anlegen, falls nicht vorhanden

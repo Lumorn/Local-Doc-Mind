@@ -2,6 +2,12 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.20] - 2025-10-18
+### Behoben
+- `start.bat` installiert fehlende Abhaengigkeiten nach, wenn eine bestehende virtuelle Umgebung PyQt6 nicht enthaelt.
+- Startpunkt verweist bei fehlendem PyQt6 auf `requirements.txt` bzw. `start.bat`.
+- README beschreibt die Nachinstallation fehlender Abhaengigkeiten und den neuen Hinweistext.
+
 ## [0.1.19] - 2025-10-17
 ### Behoben
 - GUI-Imports werden erst nach dem PyQt6-Check geladen, damit fehlende Abhaengigkeiten sauber abgefangen werden.

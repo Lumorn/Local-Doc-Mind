@@ -47,7 +47,7 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem mit Cogn
 
 1. Stelle sicher, dass Python installiert ist.
 2. Starte `start.bat` per Doppelklick oder ueber die Kommandozeile.
-3. Das Skript prueft Python, legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert PyTorch mit CUDA 12.4, installiert danach die Projektabhaengigkeiten (inkl. PyQt6 fuer die GUI), setzt den Projektpfad als `PYTHONPATH` und startet die Anwendung ueber `python -m src.main`.
+3. Das Skript prueft Python, legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert PyTorch mit CUDA 12.4, installiert danach die Projektabhaengigkeiten (inkl. PyQt6 fuer die GUI), prueft bei bestehenden Umgebungen den PyQt6-Status und installiert fehlende Abhaengigkeiten nach, setzt den Projektpfad als `PYTHONPATH` und startet die Anwendung ueber `python -m src.main`.
 
 ## Konfiguration
 
@@ -79,7 +79,7 @@ Die `ProcessingPipeline` im selben Modul verbindet Watcher-Queue und GUI: Sie li
 
 ## Einstiegspunkt
 
-`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden. Die GUI-Imports erfolgen erst nach dem PyQt6-Check, damit fehlende Abhaengigkeiten sauber mit einer Benutzerhinweis-Meldung abgefangen werden.
+`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden. Die GUI-Imports erfolgen erst nach dem PyQt6-Check, damit fehlende Abhaengigkeiten sauber mit einer Benutzerhinweis-Meldung inklusive Hinweis auf `requirements.txt` bzw. `start.bat` abgefangen werden.
 
 ## Intelligence-Module
 
