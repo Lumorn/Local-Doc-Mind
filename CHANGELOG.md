@@ -2,6 +2,14 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.12] - 2025-10-10
+### Hinzugefuegt
+- ContextMemory nutzt ChromaDB fuer Vektor-Recall und formatiert aehnliche Dokumente als LLM-Kontext.
+- ReasoningEngine erzwingt LLM-Swapping und bereinigt JSON-Ausgaben robust (inkl. Markdown-Fences).
+### Geaendert
+- DocumentPipeline verkettet OCR, Kontext-Recall, LLM-Analyse und mockhafte Dateibewegung.
+- README dokumentiert das strikte Model-Swapping und die Cognitive-Layer-Details.
+
 ## [0.1.11] - 2025-10-09
 ### Hinzugefuegt
 - Sentence-Transformers als Abhaengigkeit fuer das Memory-Embedding.
