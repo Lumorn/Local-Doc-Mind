@@ -62,6 +62,7 @@ class DocumentPipeline:
 
         target_folder = self.output_root / decision.get("folder", "Unsortiert")
         target_filename = decision.get("filename", path.name)
+        # Mockup: Datei auf Basis der LLM-Entscheidung verschieben.
         target_path = FileOperations.move(path, target_folder, target_filename)
 
         memory.remember(

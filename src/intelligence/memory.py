@@ -74,7 +74,7 @@ class ContextMemory:
             filename = (meta or {}).get("filename", "unbekannt")
             folder = (meta or {}).get("folder", "Unbekannt")
             history_lines.append(
-                f"Aehnliches Dokument {index}: Abgelegt unter '{folder}' als '{filename}'. "
+                f"Ähnliches Dokument {index}: Abgelegt unter '{folder}' als '{filename}'. "
                 f"Zusammenfassung: {doc}"
             )
         return "\n".join(history_lines)

@@ -1,6 +1,6 @@
 # Local-Doc-Mind
 
-Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses Repository enthaelt das initiale Projekt-Skelett, die Konfiguration sowie ein Startskript fuer Windows.
+Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem mit Cognitive Layer (ContextMemory + ReasoningEngine). Dieses Repository enthaelt das initiale Projekt-Skelett, die Konfiguration sowie ein Startskript fuer Windows.
 
 ## Projektstruktur
 

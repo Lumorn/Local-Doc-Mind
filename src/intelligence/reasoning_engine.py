@@ -29,7 +29,10 @@ class ReasoningEngine:
         for attempt in range(2):
             response_text = self._run_inference(messages)
             try:
-                return self._parse_json(response_text)
+                parsed = self._parse_json(response_text)
+                if not isinstance(parsed, dict):
+                    raise json.JSONDecodeError("Kein JSON-Objekt", response_text, 0)
+                return parsed
             except json.JSONDecodeError:
                 logger.warning("JSON-Parsing fehlgeschlagen (Versuch %d).", attempt + 1)
                 messages = self._build_prompt(
