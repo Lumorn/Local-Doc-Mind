@@ -2,6 +2,12 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.17] - 2025-10-15
+### Geaendert
+- Einstiegspunkt fuegt zusaetzlich den `src`-Ordner in `sys.path` ein, um Importfehler bei abweichenden Startpfaden zu vermeiden.
+- `start.bat` setzt den Projektpfad als `PYTHONPATH`, wechselt in den Projektordner und startet die App ueber `python -m src.main`.
+- README ergaenzt die neuen Startdetails fuer stabilere Imports.
+
 ## [0.1.16] - 2025-10-14
 ### Geaendert
 - Einstiegspunkt fuegt den Projektpfad in `sys.path` ein, damit direkte Starts von `src/main.py` die Module korrekt finden.

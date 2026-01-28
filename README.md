@@ -47,7 +47,7 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem mit Cogn
 
 1. Stelle sicher, dass Python installiert ist.
 2. Starte `start.bat` per Doppelklick oder ueber die Kommandozeile.
-3. Das Skript prueft Python, legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert PyTorch mit CUDA 12.4, installiert danach die Projektabhaengigkeiten (inkl. PyQt6 fuer die GUI) und startet `src/main.py`.
+3. Das Skript prueft Python, legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert PyTorch mit CUDA 12.4, installiert danach die Projektabhaengigkeiten (inkl. PyQt6 fuer die GUI), setzt den Projektpfad als `PYTHONPATH` und startet die Anwendung ueber `python -m src.main`.
 
 ## Konfiguration
 
@@ -77,7 +77,7 @@ Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-o
 
 ## Einstiegspunkt
 
-`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` wird der Projektpfad automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden.
+`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden.
 
 ## Intelligence-Module
 
