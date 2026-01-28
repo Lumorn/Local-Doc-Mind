@@ -9,6 +9,11 @@ from pathlib import Path
 
 import yaml
 
+# Stellt sicher, dass der Projektpfad fuer direkte Starts von src/main.py verfuegbar ist.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.core.model_manager import ModelManager
 from src.core.pipeline import ProcessingPipeline
 from src.core.watcher import FileWatcher

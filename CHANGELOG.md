@@ -2,6 +2,10 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.16] - 2025-10-14
+### Geaendert
+- Einstiegspunkt fuegt den Projektpfad in `sys.path` ein, damit direkte Starts von `src/main.py` die Module korrekt finden.
+
 ## [0.1.15] - 2025-10-13
 ### Hinzugefuegt
 - PyQt6 als explizite Abhaengigkeit fuer die GUI aufgenommen.
