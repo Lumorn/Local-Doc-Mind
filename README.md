@@ -75,6 +75,8 @@ Die PDF-Aufbereitung in `src/utils/image_processing.py` rendert jede Seite mit e
 
 Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-orientierte Verarbeitung: PDF-Validierung, sofortiges Backup mit SHA256-Check, OCR via DeepSeek-OCR-2, Abruf des Langzeitkontexts aus ChromaDB, LLM-basierte Analyse fuer Dateiname und Zielordner sowie das anschliessende Lernen der Entscheidung im Gedaechtnis. Das Ergebnis wird mockhaft als Dateibewegung in den Zielordner umgesetzt.
 
+Die `ProcessingPipeline` im selben Modul verbindet Watcher-Queue und GUI: Sie liest Dateien aus der Queue, ruft die `DocumentPipeline` auf und verteilt Statusmeldungen sowie fertig verarbeitete Dateipfade an die GUI-Callbacks.
+
 ## Einstiegspunkt
 
 `src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet. Beim direkten Start von `src/main.py` werden Projektpfad und `src`-Ordner automatisch in `sys.path` eingetragen, damit die `src.*`-Module auch ohne explizite PYTHONPATH-Anpassung gefunden werden.

@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.18] - 2025-10-16
+### Behoben
+- Die fehlende `ProcessingPipeline` wurde wiederhergestellt, damit GUI und Einstiegspunkt die Pipeline-Callbacks korrekt nutzen koennen.
+- README beschreibt die Rolle der `ProcessingPipeline` im Zusammenspiel von Watcher, Queue und GUI.
+
 ## [0.1.17] - 2025-10-15
 ### Geaendert
 - Einstiegspunkt fuegt zusaetzlich den `src`-Ordner in `sys.path` ein, um Importfehler bei abweichenden Startpfaden zu vermeiden.

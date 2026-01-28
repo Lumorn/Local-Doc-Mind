@@ -8,12 +8,17 @@ import shutil
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+import queue
+import threading
+from typing import Callable
 
 import torch
 
 from src.intelligence.memory import ContextMemory
 from src.intelligence.reasoning_engine import ReasoningEngine
 from src.intelligence.vision_engine import VisionEngine
+
+from src.core.model_manager import ModelManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +33,70 @@ class FileOperations:
         target_filename = target_name or source_path.name
         target_path = target_folder / target_filename
         return Path(shutil.move(str(source_path), str(target_path)))
+
+
+class ProcessingPipeline:
+    """Steuert den Verarbeitungsfluss fuer Watcher und GUI."""
+
+    def __init__(self, settings: dict, model_manager: ModelManager) -> None:
+        # Konfiguration und ModelManager merken, damit die Pipeline stabil bleibt.
+        self.settings = settings
+        self.model_manager = model_manager
+        self.queue: queue.Queue | None = settings.get("queue")
+        paths = settings.get("paths", {})
+        self.document_pipeline = DocumentPipeline(
+            backup_root=Path(paths.get("backup", "./backup")),
+            output_root=Path(paths.get("output", "./output")),
+        )
+        self._callbacks: dict[str, Callable] = {}
+        self._stop_event = threading.Event()
+
+    def set_callbacks(self, callbacks: dict[str, Callable]) -> None:
+        """Setzt die Callback-Funktionen fuer GUI-Updates."""
+        self._callbacks = callbacks
+
+    def _emit(self, key: str, payload) -> None:
+        """Sendet ein Ereignis an die GUI, falls vorhanden."""
+        callback = self._callbacks.get(key)
+        if callback:
+            callback(payload)
+
+    def run(self) -> None:
+        """Verarbeitet Dateien aus der Queue, bis ein Stop-Signal kommt."""
+        if self.queue is None:
+            logger.error("Keine Queue in den Settings gefunden.")
+            self._emit("log", "Keine Queue in den Settings gefunden.")
+            return
+
+        self._stop_event.clear()
+        self._emit("log", "Processing-Pipeline gestartet.")
+
+        while not self._stop_event.is_set():
+            try:
+                file_path = self.queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
+
+            try:
+                self._emit("log", f"Verarbeite Datei: {file_path}")
+                target_path = self.document_pipeline.process(file_path)
+                self._emit("log", f"Datei verarbeitet: {target_path}")
+                self._emit("file_processed", str(target_path))
+            except Exception as exc:
+                logger.exception("Fehler bei der Dateiverarbeitung: %s", exc)
+                self._emit("log", f"Fehler bei der Verarbeitung: {exc}")
+            finally:
+                try:
+                    self.queue.task_done()
+                except ValueError:
+                    # Falls task_done ohne passenden Eintrag aufgerufen wird, ignorieren.
+                    pass
+
+        self._emit("log", "Processing-Pipeline gestoppt.")
+
+    def stop(self) -> None:
+        """Stoppt die Pipeline-Schleife kontrolliert."""
+        self._stop_event.set()
 
 
 @dataclass
