@@ -63,6 +63,7 @@ Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offloa
 `requirements.txt` enthaelt nur die Projektpakete (inklusive PyQt6 fuer die GUI) ohne CUDA-Index-URLs und ohne `flash-attn`. Die CUDA-Variante von PyTorch wird ausschliesslich ueber das Bootstrapper-Skript installiert, damit Windows-Installationen stabil bleiben.
 
 Fuer DeepSeek-OCR-2 wird zusaetzlich `addict` benoetigt, weil der Remote-Code des Modells auf diese Bibliothek zugreift. Die Abhaengigkeit ist daher in `requirements.txt` aufgenommen.
+Beim Laden des OCR-Modells wird zudem geprueft, ob `addict` installiert ist, damit fehlende Pakete sofort mit einem klaren Hinweis gemeldet werden.
 
 ## KI-Speichermanagement
 
