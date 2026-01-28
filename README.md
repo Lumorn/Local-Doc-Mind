@@ -41,11 +41,15 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses 
 
 1. Stelle sicher, dass Python installiert ist.
 2. Starte `start.bat` per Doppelklick oder ueber die Kommandozeile.
-3. Das Skript legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert Abhaengigkeiten und startet `src/main.py`.
+3. Das Skript prueft Python, legt bei Bedarf eine virtuelle Umgebung in `.venv` an, installiert PyTorch mit CUDA 12.4, installiert danach die Projektabhaengigkeiten und startet `src/main.py`.
 
 ## Konfiguration
 
-Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind Pfade, Modell-IDs sowie grundlegende App-Informationen hinterlegt.
+Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offload-Optionen fuer Windows, Pfade und die Modell-Repos fuer OCR und LLM hinterlegt.
+
+## Abhaengigkeiten (Windows)
+
+`requirements.txt` enthaelt nur die Projektpakete ohne CUDA-Index-URLs und ohne `flash-attn`. Die CUDA-Variante von PyTorch wird ausschliesslich ueber das Bootstrapper-Skript installiert, damit Windows-Installationen stabil bleiben.
 
 ## KI-Speichermanagement
 

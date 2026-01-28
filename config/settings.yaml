@@ -1,13 +1,14 @@
-app:
-  name: "Local-Doc-Mind"
-  version: "0.1.0"
+system:
+  cpu_offload: true # Erlaubt Auslagerung in RAM wenn VRAM voll
+  use_flash_attn: false # Standardmaessig aus auf Windows
 paths:
   input: "./input"
   output: "./output"
   backup: "./backup"
-  logs: "./logs"
+  models: "./models"
 models:
-  ocr_model: "deepseek-ai/DeepSeek-OCR-2"
-  reasoning_model: "Qwen/Qwen2.5-7B-Instruct-GGUF" # Platzhalter
-  use_4bit: true
-  device: "cuda"
+  ocr:
+    repo: "deepseek-ai/DeepSeek-OCR-2"
+    quantization: "4bit" # Zwingend fuer Consumer GPUs
+  llm:
+    repo: "Qwen/Qwen2.5-7B-Instruct"

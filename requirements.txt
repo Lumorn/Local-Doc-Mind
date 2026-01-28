@@ -1,27 +1,16 @@
-# GUI
-PyQt6
+# Pinned fuer DeepSeek-OCR-2
+transformers==4.46.3
+accelerate>=0.26.0
+tokenizers>=0.20.3
+bitsandbytes>=0.43.1
 
-# System & Files
+# WICHTIG: Offizieller Windows Support
+scipy
+einops
+optimum
+PyMuPDF
+Pillow
 watchdog
 pyyaml
-# shutil ist Teil der Standardbibliothek und wird hier nicht gelistet.
-
-# PDF & Image Processing
-pymupdf
-pillow
-
-# AI & Machine Learning Backend
-# Für CUDA-Unterstützung kann ein Extra-Index nötig sein, z. B.:
-# --extra-index-url https://download.pytorch.org/whl/cu121
-# (Version und CUDA-Variante je nach System anpassen.)
-torch
-torchvision
-torchaudio
-transformers
-accelerate
-bitsandbytes
-einops  # Wichtig für DeepSeek-Architektur
-sentence-transformers
-
-# Vector Database
 chromadb
+colorama
