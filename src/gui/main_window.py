@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QDir, QModelIndex, Qt, QUrl, pyqtSignal
+from PyQt6.QtCore import QDir, QModelIndex, Qt, QTimer, QUrl, pyqtSignal
 from PyQt6.QtGui import (
     QAction,
     QColor,
@@ -26,6 +26,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from src.core.config import Config
+from src.gui.dialogs.model_manager_dialog import ModelManagerDialog
+from src.gui.dialogs.settings_dialog import SettingsDialog
 from src.gui.widgets.scan_view import ScanView
 
 
@@ -52,7 +55,7 @@ class MainWindow(QMainWindow):
     start_watchdog_requested = pyqtSignal()
     stop_watchdog_requested = pyqtSignal()
 
-    def __init__(self, config: dict, parent: QWidget | None = None) -> None:
+    def __init__(self, config: Config, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         # Konfiguration sichern und Ausgangspfad bestimmen.
         self.config = config
@@ -90,6 +93,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_splitter)
 
         self._build_toolbar()
+        QTimer.singleShot(0, self._ensure_models_available)
         _ = Image
 
     def _build_toolbar(self) -> None:
@@ -105,6 +109,14 @@ class MainWindow(QMainWindow):
         stop_action = QAction("Stop Watchdog", self)
         stop_action.triggered.connect(self.stop_watchdog_requested.emit)
         toolbar.addAction(stop_action)
+
+        settings_action = QAction("Settings", self)
+        settings_action.triggered.connect(self._open_settings)
+        toolbar.addAction(settings_action)
+
+        models_action = QAction("Models", self)
+        models_action.triggered.connect(self._open_model_manager)
+        toolbar.addAction(models_action)
 
         open_action = QAction("Open Config", self)
         open_action.triggered.connect(self._open_config)
@@ -142,6 +154,25 @@ class MainWindow(QMainWindow):
         )
         if selected:
             QDesktopServices.openUrl(QUrl.fromLocalFile(selected))
+
+    def _open_settings(self) -> None:
+        """Oeffnet den Einstellungsdialog."""
+        dialog = SettingsDialog(self.config, self)
+        if dialog.exec() == dialog.DialogCode.Accepted:
+            paths = self.config.get("paths", {})
+            self.output_path = str(Path(paths.get("output", "./output")).resolve())
+            self._refresh_tree()
+
+    def _open_model_manager(self) -> None:
+        """Oeffnet den Model-Manager."""
+        dialog = ModelManagerDialog(self.config, self)
+        dialog.exec()
+
+    def _ensure_models_available(self) -> None:
+        """Prueft beim Start, ob Modelle fehlen und oeffnet ggf. den Manager."""
+        dialog = ModelManagerDialog(self.config, self)
+        if dialog.any_model_missing():
+            dialog.exec()
 
     def _create_file_model(self):
         """Erzeugt ein Dateimodell mit kompatibler Fallback-Logik."""
