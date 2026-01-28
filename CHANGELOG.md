@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.25] - 2025-10-23
+### Behoben
+- Abhaengigkeit `addict` fuer DeepSeek-OCR-2 in `requirements.txt` aufgenommen.
+- README ergaenzt den Hinweis auf die zusaetzliche `addict`-Abhaengigkeit.
+
 ## [0.1.24] - 2025-10-22
 ### Behoben
 - DeepSeek-OCR-2 und generische Modell-Loads erlauben nun benutzerdefinierten Remote-Code ueber `trust_remote_code=True`.
