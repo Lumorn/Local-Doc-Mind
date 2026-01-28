@@ -20,6 +20,11 @@ class ModelManager:
             cls._instance._init_state()
         return cls._instance
 
+    @classmethod
+    def instance(cls) -> "ModelManager":
+        """Gibt die Singleton-Instanz zurueck."""
+        return cls()
+
     def _init_state(self) -> None:
         # Interner Zustand fuer geladene Modelle.
         self.models: Dict[str, torch.nn.Module] = {}
@@ -65,6 +70,10 @@ class ModelManager:
 
         self.models[model_type] = model
         return model
+
+    def get_model(self, model_type: str) -> torch.nn.Module:
+        """Alias fuer load_model, damit externe Module konsistent bleiben."""
+        return self.load_model(model_type)
 
     def unload_model(self, model_type: str) -> None:
         """Entlaedt ein bestimmtes Modell und gibt Speicher frei."""
