@@ -2,6 +2,13 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.8] - 2025-10-06
+### Hinzugefuegt
+- DeepSeek-OCR-2 ModelManager mit dynamischer Flash-Attention-Auswahl und 4-bit-Quantisierung.
+- OCR-VisionEngine mit PDF-zu-Image-Pipeline, Prompt-Steuerung und CUDA-OOM-Retry.
+- Neue DocumentPipeline mit Backup-Strategie, SHA256-Validierung und Markdown-Output.
+- Hochaufloesende PDF-Image-Konvertierung (3x-Matrix) fuer bessere OCR-Ergebnisse.
+
 ## [0.1.7] - 2025-10-05
 ### Hinzugefuegt
 - DeepSeek-OCR-2 Wrapper `vision_engine.py` mit hochaufgeloester PDF-zu-Image-Verarbeitung und CUDA-OOM-Retry.
