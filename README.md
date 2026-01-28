@@ -33,7 +33,9 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses 
 │       ├── vision_engine.py
 │       ├── analyzer.py
 │       ├── splitter.py
-│       └── naming.py
+│       ├── naming.py
+│       ├── memory.py
+│       └── reasoning_engine.py
 │   └── utils/
 │       ├── __init__.py
 │       └── image_processing.py
@@ -57,7 +59,7 @@ Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offloa
 
 ## KI-Speichermanagement
 
-Der neue `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus.
+Der `ModelManager` in `src/core/model_manager.py` laedt DeepSeek-OCR-2 nur bei Bedarf, nutzt 4-bit-Quantisierung und waehlt die Attention-Implementierung dynamisch aus. Ist `flash_attn` verfuegbar, wird `flash_attention_2` verwendet, andernfalls faellt der Manager auf `eager` zurueck und gibt eine Warnung fuer Windows-Kompatibilitaet aus. Zusaetzlich steuert er jetzt strikt das Model-Swapping zwischen OCR und LLM, damit Consumer-GPUs nicht beide Modelle gleichzeitig halten muessen.
 
 ## Bildaufbereitung
 
@@ -69,7 +71,7 @@ Die PDF-Aufbereitung in `src/utils/image_processing.py` rendert jede Seite mit e
 
 ## Dokumentenpipeline (OCR-Orchestrator)
 
-Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-orientierte Verarbeitung: PDF-Validierung, sofortiges Backup mit SHA256-Check, OCR via DeepSeek-OCR-2 und das Ablegen von Markdown im Output-Ordner.
+Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-orientierte Verarbeitung: PDF-Validierung, sofortiges Backup mit SHA256-Check, OCR via DeepSeek-OCR-2, Abruf des Langzeitkontexts aus ChromaDB und eine LLM-basierte Analyse fuer Dateiname und Zielordner.
 
 ## Einstiegspunkt
 
@@ -77,7 +79,7 @@ Die Klasse `DocumentPipeline` in `src/core/pipeline.py` implementiert eine OCR-o
 
 ## Intelligence-Module
 
-Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2 (gekapselt in `vision_engine.py`), ein Stapel-Scanner zum Erkennen von Dokumentgrenzen sowie eine RAG-gestuetzte Namensvergabe auf Basis von ChromaDB und einem Reasoning-LLM.
+Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2 (gekapselt in `vision_engine.py`), ein Stapel-Scanner zum Erkennen von Dokumentgrenzen, das `ContextMemory` fuer persistenten Namenskontext (ChromaDB + MiniLM) sowie der `ReasoningEngine`, der Qwen2.5 fuer Zusammenfassung, Dateinamen und Zielordner nutzt.
 
 ## GUI-Dashboard
 
