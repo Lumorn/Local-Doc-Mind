@@ -2,6 +2,12 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.27] - 2025-10-25
+### Hinzugefuegt
+- Abhaengigkeiten werden beim Start automatisch geprueft und bei Bedarf installiert.
+- OCR-Start prueft und installiert `addict` automatisch, bevor das Modell geladen wird.
+- README dokumentiert die automatische Abhaengigkeitspruefung beim Start.
+
 ## [0.1.26] - 2025-10-24
 ### Behoben
 - OCR-Model-Ladevorgang prueft jetzt vorab auf das Paket `addict` und meldet fehlende Abhaengigkeiten mit einer klaren Fehlermeldung.

@@ -12,6 +12,8 @@ import torch
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModel, AutoModelForCausalLM, BitsAndBytesConfig
 
+from src.core.dependency_manager import ensure_packages
+
 logger = logging.getLogger(__name__)
 
 
@@ -174,6 +176,7 @@ class ModelManager:
     def _ensure_ocr_dependencies() -> None:
         """Prueft, ob DeepSeek-OCR-2 notwendige Zusatzpakete installiert sind."""
         # Hinweis: DeepSeek-OCR-2 nutzt Remote-Code, der auf "addict" basiert.
+        ensure_packages(["addict"])
         if importlib.util.find_spec("addict") is None:
             raise RuntimeError(
                 "Das OCR-Modell benoetigt das Paket 'addict'. Bitte installieren Sie es "

@@ -16,6 +16,7 @@ for path in (PROJECT_ROOT, SRC_ROOT):
         sys.path.insert(0, str(path))
 
 from src.core.config import Config
+from src.core.dependency_manager import ensure_requirements
 from src.core.model_manager import ModelManager
 from src.core.pipeline import ProcessingPipeline
 from src.core.watcher import FileWatcher
@@ -23,6 +24,8 @@ from src.core.watcher import FileWatcher
 
 def main() -> None:
     """Startet die GUI samt Watcher und Processing-Pipeline."""
+    # Prueft beim Start, ob alle Abhaengigkeiten vorhanden sind und installiert sie bei Bedarf.
+    ensure_requirements(PROJECT_ROOT / "requirements.txt")
     # Prueft, ob PyQt6 installiert ist, damit die Anwendung eine klare Meldung ausgeben kann.
     if importlib.util.find_spec("PyQt6") is None:
         print(
