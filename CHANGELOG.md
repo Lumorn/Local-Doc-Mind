@@ -2,6 +2,14 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.9] - 2025-10-07
+### Hinzugefuegt
+- Striktes Model-Swapping fuer OCR und LLM im ModelManager inkl. 4-bit Qwen2.5-Loading.
+- Neues ContextMemory auf Basis von ChromaDB fuer konsistente Dateinamen.
+- ReasoningEngine fuer JSON-basierte Zusammenfassung, Dateinamen und Zielordner.
+### Geaendert
+- DocumentPipeline um Memory-Recall, LLM-Reasoning und Dateiverschiebung erweitert.
+
 ## [0.1.8] - 2025-10-06
 ### Hinzugefuegt
 - DeepSeek-OCR-2 ModelManager mit dynamischer Flash-Attention-Auswahl und 4-bit-Quantisierung.

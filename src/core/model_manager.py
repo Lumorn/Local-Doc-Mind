@@ -6,10 +6,10 @@ import gc
 import importlib.util
 import logging
 import warnings
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
-from transformers import AutoModel, BitsAndBytesConfig
+from transformers import AutoModel, AutoModelForCausalLM, BitsAndBytesConfig
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ class ModelManager:
     def _init_state(self) -> None:
         # Interner Zustand fuer geladene Modelle.
         self.models: Dict[str, torch.nn.Module] = {}
+        self.current_model: Optional[torch.nn.Module] = None
+        self.current_type: Optional[str] = None
         self.model_ids = {
             "ocr": "deepseek-ai/DeepSeek-OCR-2",
             "embedding": "sentence-transformers/all-MiniLM-L6-v2",
@@ -45,8 +47,36 @@ class ModelManager:
 
     def get_model(self, model_type: str) -> torch.nn.Module:
         """Alias fuer load_model, um bestehende Aufrufe zu unterstuetzen."""
-        resolved_id = self.model_ids.get(model_type, model_type)
-        return self.load_model(resolved_id)
+        if model_type in self.model_ids:
+            return self.switch_to(model_type)
+        return self.load_model(model_type)
+
+    def switch_to(self, model_type: str) -> torch.nn.Module:
+        """Wechselt strikt zwischen OCR und LLM, um VRAM zu schonen."""
+        if model_type not in ("ocr", "llm"):
+            raise ValueError(f"Unbekannter Modelltyp: {model_type}")
+
+        if self.current_type == model_type and self.current_model is not None:
+            return self.current_model
+
+        if self.current_model is not None:
+            logger.info("Entlade aktuelles Modell (%s) fuer Wechsel zu %s.", self.current_type, model_type)
+            del self.current_model
+            self.current_model = None
+            self.current_type = None
+            self.models.clear()
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+        if model_type == "ocr":
+            model = self._load_ocr_model()
+        else:
+            model = self._load_llm_model()
+
+        self.current_model = model
+        self.current_type = model_type
+        return model
 
     def _has_flash_attn(self) -> bool:
         # Prueft, ob flash_attn installiert ist.
@@ -54,6 +84,11 @@ class ModelManager:
 
     def load_model(self, model_id: str) -> torch.nn.Module:
         """Laedt DeepSeek-OCR-2 mit speichersparenden Einstellungen."""
+        if model_id == self.model_ids.get("ocr"):
+            return self.switch_to("ocr")
+        if model_id == self.model_ids.get("llm"):
+            return self.switch_to("llm")
+
         if model_id in self.models:
             return self.models[model_id]
 
@@ -69,6 +104,14 @@ class ModelManager:
                 logger.warning("VRAM knapp, entlade bestehende Modelle.")
                 self.unload_all()
 
+        model = AutoModel.from_pretrained(model_id)
+
+        self.models[model_id] = model
+        return model
+
+    def _load_ocr_model(self) -> torch.nn.Module:
+        """Laedt DeepSeek-OCR-2 mit speichersparenden Einstellungen."""
+        model_id = self.model_ids["ocr"]
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
@@ -84,7 +127,7 @@ class ModelManager:
                 RuntimeWarning,
             )
 
-        logger.info("Lade Modell %s mit Attention=%s.", model_id, attn_implementation)
+        logger.info("Lade OCR-Modell %s mit Attention=%s.", model_id, attn_implementation)
         model = AutoModel.from_pretrained(
             model_id,
             device_map="auto" if torch.cuda.is_available() else None,
@@ -92,7 +135,23 @@ class ModelManager:
             torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
             attn_implementation=attn_implementation,
         )
+        self.models[model_id] = model
+        return model
 
+    def _load_llm_model(self) -> torch.nn.Module:
+        """Laedt Qwen2.5-7B-Instruct in 4-bit fuer die Reasoning-Schicht."""
+        model_id = self.model_ids["llm"]
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+        )
+        logger.info("Lade LLM %s mit 4-bit-Quantisierung.", model_id)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            device_map="auto" if torch.cuda.is_available() else None,
+            quantization_config=quantization_config,
+            torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+        )
         self.models[model_id] = model
         return model
 
@@ -101,6 +160,10 @@ class ModelManager:
         if model_id in self.models:
             logger.info("Entlade Modell %s.", model_id)
             del self.models[model_id]
+            if self.current_model is not None and self.current_type is not None:
+                if self.model_ids.get(self.current_type) == model_id:
+                    self.current_model = None
+                    self.current_type = None
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()

@@ -11,9 +11,23 @@ from pathlib import Path
 
 import torch
 
+from src.intelligence.memory import ContextMemory
+from src.intelligence.reasoning_engine import ReasoningEngine
 from src.intelligence.vision_engine import VisionEngine
 
 logger = logging.getLogger(__name__)
+
+
+class FileOperations:
+    """Platzhalter fuer Dateibewegungen innerhalb der Pipeline."""
+
+    @staticmethod
+    def move(source_path: Path, target_folder: Path, target_name: str | None = None) -> Path:
+        """Verschiebt eine Datei in den Zielordner."""
+        target_folder.mkdir(parents=True, exist_ok=True)
+        target_filename = target_name or source_path.name
+        target_path = target_folder / target_filename
+        return Path(shutil.move(str(source_path), str(target_path)))
 
 
 @dataclass
@@ -24,7 +38,7 @@ class DocumentPipeline:
     output_root: Path = Path("output")
 
     def process(self, file_path: str) -> Path:
-        """Validiert, erstellt Backup, fuehrt OCR aus und speichert Markdown."""
+        """Validiert, erstellt Backup, fuehrt OCR aus und sortiert das Dokument."""
         path = Path(file_path)
         if not path.exists():
             logger.error("Datei nicht gefunden: %s", path)
@@ -40,13 +54,23 @@ class DocumentPipeline:
         markdown = engine.process_document(str(path))
         del engine
 
-        output_path = self._write_output(path, markdown)
+        memory = ContextMemory()
+        history = memory.recall(markdown)
+
+        reasoning = ReasoningEngine()
+        decision = reasoning.analyze_and_sort(markdown, history)
+
+        target_folder = self.output_root / decision.get("folder", "Unsortiert")
+        target_filename = decision.get("filename", path.name)
+        target_path = FileOperations.move(path, target_folder, target_filename)
+
+        memory.remember(target_filename, decision.get("summary", ""))
         del markdown
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        logger.info("OCR abgeschlossen: %s", output_path)
-        return output_path
+        logger.info("Dokument verschoben nach %s", target_path)
+        return target_path
 
     def _create_backup(self, file_path: Path) -> Path:
         """Erstellt ein Backup der Datei im datierten Ordner."""
@@ -71,11 +95,3 @@ class DocumentPipeline:
             for chunk in iter(lambda: handle.read(8192), b""):
                 sha256.update(chunk)
         return sha256.hexdigest()
-
-    def _write_output(self, source_path: Path, markdown: str) -> Path:
-        """Schreibt das OCR-Ergebnis in den Output-Ordner."""
-        self.output_root.mkdir(parents=True, exist_ok=True)
-        output_name = f"{source_path.stem}_ocr.md"
-        output_path = self.output_root / output_name
-        output_path.write_text(markdown, encoding="utf-8")
-        return output_path
