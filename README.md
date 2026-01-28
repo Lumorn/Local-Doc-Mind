@@ -21,6 +21,13 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem. Dieses 
 │       ├── model_manager.py
 │       ├── watcher.py
 │       └── pipeline.py
+│   └── gui/
+│       ├── __init__.py
+│       ├── main_window.py
+│       ├── workers.py
+│       └── widgets/
+│           ├── __init__.py
+│           └── scan_view.py
 │   └── intelligence/
 │       ├── __init__.py
 │       ├── analyzer.py
@@ -51,3 +58,7 @@ Das Modul `src/core/watcher.py` ueberwacht den Eingangsordner rekursiv und legt 
 ## Intelligence-Module
 
 Die neuen Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse mit DeepSeek-OCR-2, ein Stapel-Scanner zum Erkennen von Dokumentgrenzen sowie eine RAG-gestuetzte Namensvergabe auf Basis von ChromaDB und einem Reasoning-LLM.
+
+## GUI-Dashboard
+
+Das neue GUI-Paket unter `src/gui/` liefert ein modernes Dashboard mit Dateibaum, Scan-Ansicht und Matrix-Logfenster. Die `PipelineWorker`-Klasse verbindet die Processing-Pipeline ueber Qt-Signale mit der Benutzeroberflaeche, waehrend `ScanView` halbtransparente Bounding-Boxen fuer visuelle KI-Overlays zeichnet.

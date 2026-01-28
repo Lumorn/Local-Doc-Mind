@@ -25,3 +25,9 @@ Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokument
 ### Hinzugefuegt
 - Neue Intelligence-Module fuer OCR-Analyse, Stapel-Splitting und RAG-basierte Dateibenennung.
 - Erweiterungen am ModelManager fuer eine konsistente Nutzung ueber die neuen Module hinweg.
+
+## [0.1.4] - 2025-10-02
+### Hinzugefuegt
+- GUI-Dashboard mit Dateibaum, Scan-Ansicht und Matrix-Logfenster.
+- `PipelineWorker` fuer die Qt-Thread-Integration inkl. Signal-Bridge.
+- Callback-Unterstuetzung in der Processing-Pipeline fuer GUI-Updates.
