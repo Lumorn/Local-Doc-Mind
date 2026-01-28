@@ -177,7 +177,8 @@ class ModelManager:
         if importlib.util.find_spec("addict") is None:
             raise RuntimeError(
                 "Das OCR-Modell benoetigt das Paket 'addict'. Bitte installieren Sie es "
-                "mit 'pip install addict' und starten Sie die Anwendung erneut."
+                "mit 'pip install -r requirements.txt' (oder 'pip install addict') und "
+                "starten Sie die Anwendung erneut."
             )
 
     def _load_llm_model(self) -> torch.nn.Module:
