@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import gc
-import inspect
 import logging
 from pathlib import Path
 from typing import List
@@ -22,6 +21,8 @@ _OCR_PROMPT = "<image>\n<|grounding|>Convert the document to markdown."
 
 class VisionEngine:
     """Stellt die OCR-Schnittstelle fuer DeepSeek-OCR-2 bereit."""
+
+    _OCR_PROMPT = _OCR_PROMPT
 
     def __init__(self, model_id: str = "deepseek-ai/DeepSeek-OCR-2") -> None:
         self._model_manager = ModelManager.instance()
@@ -44,10 +45,14 @@ class VisionEngine:
                 finally:
                     # Bild sofort freigeben, um Speicher zu sparen.
                     del image
+                    # Nach jeder Seite aktiv aufraeumen, um RAM/VRAM zu entlasten.
+                    gc.collect()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
                 markdown_parts.append(markdown)
                 logger.info("Seite %d verarbeitet.", page_index)
         finally:
-            # Gesamtliste freigeben, um Speicher zu sparen.
+            # Generator freigeben, um Speicher zu sparen.
             del images
             gc.collect()
             if torch.cuda.is_available():
@@ -76,7 +81,7 @@ class VisionEngine:
             result = self._call_model_infer(model, image)
             return self._normalize_result(result)
 
-        inputs = self._processor(text=_OCR_PROMPT, images=image, return_tensors="pt")
+        inputs = self._processor(text=self._OCR_PROMPT, images=image, return_tensors="pt")
         device = next(model.parameters()).device
         inputs = {key: value.to(device) for key, value in inputs.items()}
 
@@ -96,55 +101,26 @@ class VisionEngine:
         self._output_dir.mkdir(parents=True, exist_ok=True)
         return self._output_dir
 
-    def _get_output_kwargs(self, parameters: List[str] | None) -> dict:
-        """Ermittelt optionale Output-Parameter fuer die Modell-Inferenz."""
-        if not parameters:
-            return {}
-        if "output_path" in parameters:
-            return {"output_path": str(self._ensure_output_dir())}
-        if "output_dir" in parameters:
-            return {"output_dir": str(self._ensure_output_dir())}
-        return {}
-
     def _call_model_infer(self, model: torch.nn.Module, image: Image.Image) -> object:
-        """Ruft model.infer mit verschiedenen Signaturen auf, um API-Unterschiede abzufangen."""
-        infer = model.infer
-        try:
-            signature = inspect.signature(infer)
-        except (TypeError, ValueError):
-            signature = None
-
-        if signature is not None:
-            parameters = [name for name in signature.parameters if name != "self"]
-            output_kwargs = self._get_output_kwargs(parameters)
-            if "images" in parameters:
-                if "prompt" in parameters:
-                    return infer(prompt=_OCR_PROMPT, images=[image], **output_kwargs)
-                return infer(images=[image], **output_kwargs)
-            if "image" in parameters:
-                if "prompt" in parameters:
-                    return infer(prompt=_OCR_PROMPT, image=image, **output_kwargs)
-                return infer(image=image, **output_kwargs)
-            # Fallback: positionaler Aufruf (Prompt + Image) fuer aeltere Signaturen.
-            if len(parameters) >= 2:
-                return infer(_OCR_PROMPT, image, **output_kwargs)
-            return infer(image, **output_kwargs)
-
-        # Letzter Rettungsanker, falls die Signatur nicht ermittelt werden kann.
+        """Ruft model.infer mit einem festen Keyword-Call auf."""
         output_kwargs = {"output_path": str(self._ensure_output_dir())}
+        images_payload = [image]
+        logger.debug(
+            "OCR infer Aufruf: images_typ=%s, image_typ=%s, images_ist_liste=%s",
+            type(images_payload).__name__,
+            type(image).__name__,
+            isinstance(images_payload, list),
+        )
         try:
-            return infer(_OCR_PROMPT, images=[image], **output_kwargs)
+            return model.infer(images=images_payload, prompt=self._OCR_PROMPT, **output_kwargs)
+        except (IndexError, AttributeError) as exc:
+            raise RuntimeError("Modell erwartet Liste, erhielt Einzelobjekt") from exc
         except TypeError:
+            # Falls das Modell keine Output-Pfade akzeptiert, erneut ohne Pfadangabe versuchen.
             try:
-                return infer(prompt=_OCR_PROMPT, images=[image], **output_kwargs)
-            except TypeError:
-                try:
-                    return infer(_OCR_PROMPT, image, **output_kwargs)
-                except TypeError:
-                    try:
-                        return infer(image, **output_kwargs)
-                    except TypeError:
-                        return infer(image)
+                return model.infer(images=images_payload, prompt=self._OCR_PROMPT)
+            except (IndexError, AttributeError) as exc:
+                raise RuntimeError("Modell erwartet Liste, erhielt Einzelobjekt") from exc
 
     @staticmethod
     def _normalize_result(result: object) -> str:

@@ -75,11 +75,11 @@ Die LLM-Schicht nutzt Qwen2.5-7B-Instruct in 4-bit-Quantisierung, wodurch das Mo
 
 ## Bildaufbereitung
 
-Die PDF-Aufbereitung in `src/utils/image_processing.py` rendert jede Seite mit einer 3x-Matrix (ca. 250-300 DPI), um auch kleingedruckte Texte fuer DeepSeek-OCR-2 lesbar zu machen. Die Seiten werden als `PIL.Image` an die OCR-Pipeline uebergeben.
+Die PDF-Aufbereitung in `src/utils/image_processing.py` rendert jede Seite mit einer 3x-Matrix (ca. 250-300 DPI), um auch kleingedruckte Texte fuer DeepSeek-OCR-2 lesbar zu machen. Die Seiten werden als Generator gestreamt und als `PIL.Image` an die OCR-Pipeline uebergeben, damit nicht alle Seiten gleichzeitig im RAM liegen.
 
 ## Vision-Engine
 
-`src/intelligence/vision_engine.py` kapselt den Zugriff auf DeepSeek-OCR-2. Die Klasse `VisionEngine` nutzt den `ModelManager`, bereitet den Prompt fuer Markdown-Extraktion vor und faengt CUDA-OOMs ab, indem der Cache bereinigt und die Inferenz erneut angestossen wird. Zusaetzlich wird die `infer`-Signatur flexibel behandelt, damit unterschiedliche DeepSeek-OCR-2 API-Varianten (z.B. `image` statt `images`) sauber funktionieren. Falls das Modell einen `output_path` oder `output_dir` verlangt, wird automatisch ein lokaler OCR-Cache-Ordner erstellt und uebergeben, um Windows-Pfadfehler zu vermeiden.
+`src/intelligence/vision_engine.py` kapselt den Zugriff auf DeepSeek-OCR-2. Die Klasse `VisionEngine` nutzt den `ModelManager`, bereitet den Prompt fuer Markdown-Extraktion vor und faengt CUDA-OOMs ab, indem der Cache bereinigt und die Inferenz erneut angestossen wird. Der Aufruf an `infer` erfolgt jetzt immer per Keyword-Argumenten mit einer expliziten Liste fuer `images`, inklusive Debug-Logging zu den uebergebenen Typen. Falls das Modell einen `output_path` erwartet, wird automatisch ein lokaler OCR-Cache-Ordner erstellt, ansonsten erfolgt ein Fallback ohne Pfadangabe.
 
 ## Dokumentenpipeline (OCR-Orchestrator)
 
