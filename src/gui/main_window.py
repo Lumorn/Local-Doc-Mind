@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QDir, Qt, QUrl, pyqtSignal
+from PyQt6.QtCore import QDir, QModelIndex, Qt, QUrl, pyqtSignal
 from PyQt6.QtGui import (
     QAction,
     QColor,
@@ -161,8 +161,17 @@ class MainWindow(QMainWindow):
 
     def _apply_tree_root(self) -> None:
         """Setzt den Root-Knoten fuer den Dateibaum."""
-        if hasattr(self.file_model, "index"):
-            self.tree_view.setRootIndex(self.file_model.index(self.output_path))
+        if not hasattr(self.file_model, "index"):
+            return
+
+        if isinstance(self.file_model, QStandardItemModel):
+            # Beim Fallback-Modell muss ein Index ueber Zeilen/Spalten gesetzt werden.
+            root_index = self.file_model.index(0, 0) if self.file_model.rowCount() else QModelIndex()
+        else:
+            root_index = self.file_model.index(self.output_path)
+
+        if root_index.isValid():
+            self.tree_view.setRootIndex(root_index)
 
     def _build_fallback_model(self) -> QStandardItemModel:
         """Baut ein einfaches Modell, falls kein Qt-Dateimodell verfuegbar ist."""

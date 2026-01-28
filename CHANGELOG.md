@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.22] - 2025-10-20
+### Behoben
+- Dateibaum setzt beim Fallback-Modell den Root-Index ueber Zeilen/Spalten, um PyQt6-Fehler mit Pfad-Parametern zu vermeiden.
+- README beschreibt die Root-Index-Logik fuer das Fallback-Modell.
+
 ## [0.1.21] - 2025-10-19
 ### Behoben
 - Dateibaum faellt auf ein internes Modell zurueck, wenn `QFileSystemModel` in PyQt6 nicht verfuegbar ist.
