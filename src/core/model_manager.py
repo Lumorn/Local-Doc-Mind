@@ -9,6 +9,7 @@ import warnings
 from typing import Dict, Optional
 
 import torch
+from sentence_transformers import SentenceTransformer
 from transformers import AutoModel, AutoModelForCausalLM, BitsAndBytesConfig
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class ModelManager:
         self.models: Dict[str, torch.nn.Module] = {}
         self.current_model: Optional[torch.nn.Module] = None
         self.current_type: Optional[str] = None
+        self.embedding_model: Optional[SentenceTransformer] = None
         self.model_ids = {
             "ocr": "deepseek-ai/DeepSeek-OCR-2",
             "embedding": "sentence-transformers/all-MiniLM-L6-v2",
@@ -48,6 +50,8 @@ class ModelManager:
     def get_model(self, model_type: str) -> torch.nn.Module:
         """Alias fuer load_model, um bestehende Aufrufe zu unterstuetzen."""
         if model_type in self.model_ids:
+            if model_type == "embedding":
+                return self.get_embedding_model()
             return self.switch_to(model_type)
         return self.load_model(model_type)
 
@@ -61,10 +65,11 @@ class ModelManager:
 
         if self.current_model is not None:
             logger.info("Entlade aktuelles Modell (%s) fuer Wechsel zu %s.", self.current_type, model_type)
+            if self.current_type in self.model_ids:
+                self.models.pop(self.model_ids[self.current_type], None)
             del self.current_model
             self.current_model = None
             self.current_type = None
-            self.models.clear()
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -84,6 +89,8 @@ class ModelManager:
 
     def load_model(self, model_id: str) -> torch.nn.Module:
         """Laedt DeepSeek-OCR-2 mit speichersparenden Einstellungen."""
+        if model_id == self.model_ids.get("embedding"):
+            return self.get_embedding_model()
         if model_id == self.model_ids.get("ocr"):
             return self.switch_to("ocr")
         if model_id == self.model_ids.get("llm"):
@@ -108,6 +115,14 @@ class ModelManager:
 
         self.models[model_id] = model
         return model
+
+    def get_embedding_model(self) -> SentenceTransformer:
+        """Laedt das Embedding-Modell dauerhaft auf die CPU."""
+        if self.embedding_model is None:
+            model_id = self.model_ids["embedding"]
+            logger.info("Lade Embedding-Modell %s auf der CPU.", model_id)
+            self.embedding_model = SentenceTransformer(model_id, device="cpu")
+        return self.embedding_model
 
     def _load_ocr_model(self) -> torch.nn.Module:
         """Laedt DeepSeek-OCR-2 mit speichersparenden Einstellungen."""

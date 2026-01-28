@@ -55,16 +55,20 @@ class DocumentPipeline:
         del engine
 
         memory = ContextMemory()
-        history = memory.recall(markdown)
+        history_context = memory.recall(markdown)
 
         reasoning = ReasoningEngine()
-        decision = reasoning.analyze_and_sort(markdown, history)
+        decision = reasoning.analyze_and_sort(markdown, history_context)
 
         target_folder = self.output_root / decision.get("folder", "Unsortiert")
         target_filename = decision.get("filename", path.name)
         target_path = FileOperations.move(path, target_folder, target_filename)
 
-        memory.remember(target_filename, decision.get("summary", ""))
+        memory.remember(
+            target_filename,
+            decision.get("folder", "Unsortiert"),
+            decision.get("summary", ""),
+        )
         del markdown
         if torch.cuda.is_available():
             torch.cuda.empty_cache()

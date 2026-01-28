@@ -23,7 +23,7 @@ class ReasoningEngine:
         self._model_id = self._model_manager.model_ids["llm"]
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_id)
 
-    def analyze_and_sort(self, ocr_text: str, history_context: List[dict]) -> Dict[str, Any]:
+    def analyze_and_sort(self, ocr_text: str, history_context: str) -> Dict[str, Any]:
         """Analysiert OCR-Text und liefert Summary, Dateiname und Zielordner."""
         messages = self._build_prompt(ocr_text, history_context)
         for attempt in range(2):
@@ -37,7 +37,8 @@ class ReasoningEngine:
                     history_context,
                     extra_instruction="Antworte ausschliesslich mit rohem JSON ohne Markdown.",
                 )
-        raise ValueError("LLM lieferte kein parsebares JSON.")
+        logger.error("LLM lieferte kein parsebares JSON, verwende Fallback.")
+        return self._fallback_decision(ocr_text)
 
     def _run_inference(self, messages: List[dict]) -> str:
         """Fuehrt die LLM-Inferenz mit dem Chat-Template aus."""
@@ -65,19 +66,24 @@ class ReasoningEngine:
     def _build_prompt(
         self,
         ocr_text: str,
-        history_context: List[dict],
+        history_context: str,
         extra_instruction: str | None = None,
     ) -> List[dict]:
         """Erstellt das Chat-Prompt fuer Qwen 2.5."""
-        system_prompt = "Du bist ein praeziser Dokumenten-Archivar. Antworte NUR mit valide JSON."
+        system_prompt = (
+            "Du bist ein praeziser Dokumenten-Archivar. Deine Aufgabe ist es, basierend auf dem "
+            "Inhalt und der Historie einen Dateinamen und einen Zielordner zu bestimmen. "
+            "Antworte AUSSCHLIESSLICH mit validem JSON."
+        )
         user_prompt = (
-            "Dokumentinhalt: {ocr_text}\n"
-            "Aehnliche Dateien aus der Vergangenheit: {history_context}\n"
-            "Aufgabe:\n"
-            "- Fasse den Inhalt in 1 Satz zusammen.\n"
-            "- Generiere einen Dateinamen (Format: YYYY-MM-DD_Firma_Typ.pdf).\n"
-            "- Waehle einen Zielordner (z.B. 'Rechnungen/2024').\n"
-            "Output JSON Schema: {'summary': str, 'filename': str, 'folder': str}"
+            "DOKUMENT TEXT: {ocr_text}\n\n"
+            "HISTORISCHE ENTSCHEIDUNGEN (Beispiele): {history_context}\n\n"
+            "AUFGABE:\n\n"
+            "Fasse den Inhalt in 1 Satz zusammen (summary).\n\n"
+            "Generiere einen Dateinamen nach dem Muster der Historie (filename).\n\n"
+            "Waehle/Erstelle einen passenden Zielordner (folder).\n\n"
+            'OUTPUT JSON SCHEMA: {{"summary": "...", "filename": "YYYY-MM-DD_Name.pdf", '
+            '"folder": "Kategorie/Unterkategorie"}}'
         ).format(ocr_text=ocr_text, history_context=history_context)
 
         if extra_instruction:
@@ -101,3 +107,12 @@ class ReasoningEngine:
                 cleaned = brace_match.group(0).strip()
 
         return json.loads(cleaned)
+
+    def _fallback_decision(self, ocr_text: str) -> Dict[str, Any]:
+        """Erzeugt eine konservative Fallback-Antwort, falls das LLM scheitert."""
+        summary = ocr_text.strip().splitlines()[0] if ocr_text.strip() else "Keine Zusammenfassung verfuegbar."
+        return {
+            "summary": summary[:200],
+            "filename": "Unbekannt.pdf",
+            "folder": "Unsortiert",
+        }
