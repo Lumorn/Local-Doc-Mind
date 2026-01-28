@@ -18,11 +18,16 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem mit Cogn
 │   ├── main.py
 │   └── core/
 │       ├── __init__.py
+│       ├── config.py
 │       ├── model_manager.py
 │       ├── watcher.py
 │       └── pipeline.py
 │   └── gui/
 │       ├── __init__.py
+│       ├── dialogs/
+│       │   ├── __init__.py
+│       │   ├── model_manager_dialog.py
+│       │   └── settings_dialog.py
 │       ├── main_window.py
 │       ├── workers.py
 │       └── widgets/
@@ -51,7 +56,7 @@ Local-Doc-Mind ist ein lokales, KI-gestuetztes Dokumenten-Sortiersystem mit Cogn
 
 ## Konfiguration
 
-Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offload-Optionen fuer Windows, Pfade und die Modell-Repos fuer OCR und LLM hinterlegt.
+Die zentrale Konfiguration liegt in `config/settings.yaml`. Dort sind die Offload-Optionen fuer Windows, Pfade und die Modell-Repos fuer OCR und LLM hinterlegt. Die GUI nutzt die neue `Config`-Klasse in `src/core/config.py`, um diese Werte zu laden, zu speichern und den Modellpfad fuer Downloads abzuleiten.
 
 ## Abhaengigkeiten (Windows)
 
@@ -90,3 +95,5 @@ Die Module unter `src/intelligence/` liefern die Kern-Intelligenz: OCR-Analyse m
 Das GUI-Paket unter `src/gui/` liefert ein modernes Dashboard mit Dateibaum, Scan-Ansicht und Matrix-Logfenster. Die `PipelineWorker`-Klasse verbindet die Processing-Pipeline ueber Qt-Signale mit der Benutzeroberflaeche, waehrend `ScanView` halbtransparente Bounding-Boxen fuer visuelle KI-Overlays zeichnet.
 
 Das Hauptfenster verwendet nach Moeglichkeit `QFileSystemModel` fuer den Dateibaum und weicht bei inkompatiblen PyQt6-Builds automatisch auf ein internes Standardmodell aus, damit der Dateibaum auch ohne `QFileSystemModel` angezeigt wird. Das Fallback-Modell setzt dabei den Root-Index ueber Zeile/Spalte, damit PyQt6 bei fehlender Pfad-API nicht abstuerzt.
+
+Neu hinzugekommen sind ein Einstellungsdialog fuer die Bearbeitung der YAML-Konfiguration (inklusive Pfaden, Hardware-Optionen und Quantisierung) sowie ein Model-Manager zum Download und Loeschen von OCR/LLM-Modellen mit Fortschrittsanzeige. Beim Start prueft die GUI, ob Modelle fehlen, und oeffnet bei Bedarf automatisch den Model-Manager.

@@ -7,7 +7,6 @@ import queue
 import sys
 from pathlib import Path
 
-import yaml
 
 # Stellt sicher, dass der Projektpfad und der src-Ordner fuer direkte Starts verfuegbar sind.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -16,20 +15,10 @@ for path in (PROJECT_ROOT, SRC_ROOT):
     if path.exists() and str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from src.core.config import Config
 from src.core.model_manager import ModelManager
 from src.core.pipeline import ProcessingPipeline
 from src.core.watcher import FileWatcher
-
-
-def load_settings(config_path: Path) -> dict:
-    """Lade die Konfiguration aus einer YAML-Datei."""
-    # Wenn die Datei fehlt, geben wir eine leere Konfiguration zurueck.
-    if not config_path.exists():
-        print(f"Konfigurationsdatei nicht gefunden: {config_path}")
-        return {}
-
-    with config_path.open("r", encoding="utf-8") as config_file:
-        return yaml.safe_load(config_file) or {}
 
 
 def main() -> None:
@@ -47,9 +36,8 @@ def main() -> None:
     from src.gui.main_window import MainWindow, apply_dark_theme
     from src.gui.workers import PipelineWorker
     config_path = Path(__file__).resolve().parents[1] / "config" / "settings.yaml"
-    settings = load_settings(config_path)
-    settings["config_path"] = str(config_path)
-    settings["queue"] = queue.Queue()
+    settings = Config(config_path)
+    settings.set_runtime_value("queue", queue.Queue())
 
     app = QApplication(sys.argv)
     apply_dark_theme(app)
@@ -60,7 +48,7 @@ def main() -> None:
     window = MainWindow(settings)
     pipeline = ProcessingPipeline(settings, model_manager)
     worker = PipelineWorker(pipeline)
-    watcher = FileWatcher(settings.get("paths", {}).get("input", "./input"), settings["queue"])
+    watcher = FileWatcher(settings.get("paths", {}).get("input", "./input"), settings.get("queue"))
 
     window.attach_worker(worker)
 

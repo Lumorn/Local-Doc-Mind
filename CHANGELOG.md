@@ -2,6 +2,14 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.23] - 2025-10-21
+### Hinzugefuegt
+- Neue Config-Klasse fuer Laden/Speichern der YAML-Konfiguration und Modellpfade.
+- Einstellungsdialog fuer Pfade, Hardware-Optionen und Quantisierung.
+- Model-Manager-Dialog mit Download/Loesch-Workflow und Fortschrittsanzeige.
+- GUI oeffnet den Model-Manager automatisch, wenn Modelle fehlen.
+- README dokumentiert die neuen GUI-Dialoge und die Config-Klasse.
+
 ## [0.1.22] - 2025-10-20
 ### Behoben
 - Dateibaum setzt beim Fallback-Modell den Root-Index ueber Zeilen/Spalten, um PyQt6-Fehler mit Pfad-Parametern zu vermeiden.

@@ -16,3 +16,4 @@ chromadb
 colorama
 sentence-transformers
 PyQt6
+huggingface_hub
