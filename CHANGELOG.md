@@ -2,6 +2,15 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.11] - 2025-10-09
+### Hinzugefuegt
+- Sentence-Transformers als Abhaengigkeit fuer das Memory-Embedding.
+### Geaendert
+- ModelManager entfernt OCR/LLM-Modelle strikt beim Wechsel, um VRAM freizugeben.
+- ReasoningEngine validiert JSON-Antworten explizit vor dem Weiterreichen.
+- Pipeline kommentiert die mockhafte Dateiverschiebung fuer die Cognitive Layer.
+- README hebt die Cognitive Layer im Projektueberblick hervor.
+
 ## [0.1.10] - 2025-10-08
 ### Hinzugefuegt
 - Dauerhaftes CPU-Embedding-Modell (MiniLM) fuer die Cognitive Layer.
