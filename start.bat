@@ -1,43 +1,69 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Prüfen, ob die virtuelle Umgebung existiert
+REM Pruefen, ob Python verfuegbar ist
+where python >nul 2>&1
+if errorlevel 1 (
+    echo [FEHLER] Python wurde nicht gefunden. Bitte Python installieren und erneut starten.
+    pause
+    exit /b 1
+)
+
+REM Pruefen, ob die virtuelle Umgebung existiert
 if not exist ".venv" (
     echo [INFO] Virtuelle Umgebung wird erstellt...
     python -m venv .venv
     if errorlevel 1 (
-        echo [ERROR] Konnte die virtuelle Umgebung nicht erstellen.
+        echo [FEHLER] Konnte die virtuelle Umgebung nicht erstellen.
+        pause
+        exit /b 1
+    )
+
+    call .venv\Scripts\activate
+    if errorlevel 1 (
+        echo [FEHLER] Konnte die virtuelle Umgebung nicht aktivieren.
         pause
         exit /b 1
     )
 
     echo [INFO] Pip wird aktualisiert...
-    .venv\Scripts\python.exe -m pip install --upgrade pip
+    python -m pip install --upgrade pip
     if errorlevel 1 (
-        echo [ERROR] Konnte pip nicht aktualisieren.
+        echo [FEHLER] Konnte pip nicht aktualisieren.
         pause
         exit /b 1
     )
 
-    echo [INFO] Abhaengigkeiten werden installiert...
-    .venv\Scripts\python.exe -m pip install -r requirements.txt
+    echo [INFO] Installiere PyTorch mit CUDA Support...
+    pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
     if errorlevel 1 (
-        echo [ERROR] Konnte Abhaengigkeiten nicht installieren.
+        echo [FEHLER] Konnte PyTorch nicht installieren.
+        pause
+        exit /b 1
+    )
+
+    echo [INFO] Installiere Projekt-Abhaengigkeiten...
+    pip install -r requirements.txt
+    if errorlevel 1 (
+        echo [FEHLER] Konnte Abhaengigkeiten nicht installieren.
+        pause
+        exit /b 1
+    )
+) else (
+    call .venv\Scripts\activate
+    if errorlevel 1 (
+        echo [FEHLER] Konnte die virtuelle Umgebung nicht aktivieren.
         pause
         exit /b 1
     )
 )
 
-REM Virtuelle Umgebung aktivieren
-call .venv\Scripts\activate
-if errorlevel 1 (
-    echo [ERROR] Konnte die virtuelle Umgebung nicht aktivieren.
-    pause
-    exit /b 1
-)
+REM Ordnerstruktur anlegen, falls nicht vorhanden
+mkdir input output backup models logs 2>nul
 
 REM Hauptprogramm starten
 python src\main.py
-
-REM Fenster offen halten, damit Fehlermeldungen sichtbar bleiben
-pause
+if errorlevel 1 (
+    echo [FEHLER] Die Anwendung wurde mit einem Fehler beendet.
+    pause
+)
