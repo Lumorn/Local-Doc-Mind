@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.24] - 2025-10-22
+### Behoben
+- DeepSeek-OCR-2 und generische Modell-Loads erlauben nun benutzerdefinierten Remote-Code ueber `trust_remote_code=True`.
+- README dokumentiert das Setzen von `trust_remote_code` fuer DeepSeek-OCR-2.
+
 ## [0.1.23] - 2025-10-21
 ### Hinzugefuegt
 - Neue Config-Klasse fuer Laden/Speichern der YAML-Konfiguration und Modellpfade.

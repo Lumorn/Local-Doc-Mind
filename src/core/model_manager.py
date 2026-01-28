@@ -123,7 +123,10 @@ class ModelManager:
                 logger.warning("VRAM knapp, entlade bestehende Modelle.")
                 self.unload_all()
 
-        model = AutoModel.from_pretrained(model_id)
+        model = AutoModel.from_pretrained(
+            model_id,
+            trust_remote_code=True,  # Erlaubt benutzerdefinierten Modellcode.
+        )
 
         self.models[model_id] = model
         return model
@@ -161,6 +164,7 @@ class ModelManager:
             quantization_config=quantization_config,
             torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
             attn_implementation=attn_implementation,
+            trust_remote_code=True,  # DeepSeek-OCR-2 benoetigt benutzerdefinierten Code.
         )
         self.models[model_id] = model
         return model
