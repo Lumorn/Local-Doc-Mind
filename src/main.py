@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import importlib.util
 import queue
+import re
+import subprocess
 import sys
 from pathlib import Path
+from importlib import metadata
 
 
 # Stellt sicher, dass der Projektpfad und der src-Ordner fuer direkte Starts verfuegbar sind.
@@ -21,8 +24,61 @@ from src.core.pipeline import ProcessingPipeline
 from src.core.watcher import FileWatcher
 
 
+def _extract_requirement_name(line: str) -> str | None:
+    """Extrahiert den Paketnamen aus einer requirements-Zeile."""
+    cleaned = line.split("#", 1)[0].strip()
+    if not cleaned:
+        return None
+    cleaned = cleaned.split(";", 1)[0].strip()
+    if not cleaned:
+        return None
+    name = re.split(r"[<>=!~ ]", cleaned, maxsplit=1)[0].strip()
+    if "[" in name:
+        name = name.split("[", 1)[0].strip()
+    return name or None
+
+
+def _find_missing_requirements(requirements_path: Path) -> list[str]:
+    """Sammelt fehlende Pakete aus der requirements-Datei."""
+    missing: list[str] = []
+    if not requirements_path.exists():
+        return missing
+    for line in requirements_path.read_text(encoding="utf-8").splitlines():
+        name = _extract_requirement_name(line)
+        if not name:
+            continue
+        try:
+            metadata.version(name)
+        except metadata.PackageNotFoundError:
+            missing.append(name)
+    return missing
+
+
+def _install_requirements(requirements_path: Path, missing: list[str]) -> None:
+    """Installiert fehlende Abhaengigkeiten via pip."""
+    missing_list = ", ".join(missing)
+    print(f"Fehlende Abhaengigkeiten gefunden ({missing_list}). Installation wird gestartet...")
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-r", str(requirements_path)],
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(
+            "Installation der Abhaengigkeiten ist fehlgeschlagen. Bitte pruefe die Ausgabe "
+            "und fuehre 'pip install -r requirements.txt' manuell aus."
+        )
+        raise SystemExit(1) from exc
+
+
 def main() -> None:
     """Startet die GUI samt Watcher und Processing-Pipeline."""
+    # Prueft beim Start alle Abhaengigkeiten und installiert fehlende Pakete automatisch nach.
+    requirements_path = PROJECT_ROOT / "requirements.txt"
+    missing = _find_missing_requirements(requirements_path)
+    if missing:
+        _install_requirements(requirements_path, missing)
+
     # Prueft, ob PyQt6 installiert ist, damit die Anwendung eine klare Meldung ausgeben kann.
     if importlib.util.find_spec("PyQt6") is None:
         print(
