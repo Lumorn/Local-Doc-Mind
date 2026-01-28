@@ -2,6 +2,12 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.7] - 2025-10-05
+### Hinzugefuegt
+- DeepSeek-OCR-2 Wrapper `vision_engine.py` mit hochaufgeloester PDF-zu-Image-Verarbeitung und CUDA-OOM-Retry.
+- Neue `DocumentPipeline` fuer PDF-Validierung, Backup-Strategie, OCR-Orchestrierung und Markdown-Output.
+- Wiederverwendbare Bild-Hilfsfunktion `pdf_page_to_image` fuer konsistente DPI/Zoom-Settings.
+
 ## [0.1.6] - 2025-10-04
 ### Geaendert
 - `requirements.txt` bereinigt: feste Transformer-Version, Windows-taugliche Pakete und ohne CUDA-Index-URLs bzw. `flash-attn`.
