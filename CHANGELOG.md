@@ -2,6 +2,11 @@
 
 Alle nennenswerten Aenderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [0.1.27] - 2025-10-25
+### Behoben
+- Fehlermeldung fuer fehlendes `addict` verweist nun explizit auf `requirements.txt`.
+- README ergaenzt den Hinweis auf den Verweis in der Fehlermeldung.
+
 ## [0.1.26] - 2025-10-24
 ### Behoben
 - OCR-Model-Ladevorgang prueft jetzt vorab auf das Paket `addict` und meldet fehlende Abhaengigkeiten mit einer klaren Fehlermeldung.
