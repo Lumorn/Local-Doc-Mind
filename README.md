@@ -53,7 +53,15 @@ Der neue `ModelManager` in `src/core/model_manager.py` laedt OCR-, Embedding- un
 
 ## Dateiueberwachung & Processing-Pipeline
 
-Das Modul `src/core/watcher.py` ueberwacht den Eingangsordner rekursiv und legt nur fertig geschriebene PDF-Dateien in eine Queue. Die neue `ProcessingPipeline` in `src/core/pipeline.py` nimmt diese Aufgaben entgegen, erstellt zuerst ein datiertes Backup (mit SHA256-Integritaetscheck) und verschiebt die Datei danach in einen internen Processing-Ordner. So bleibt der Input-Ordner sauber, bevor eine KI die Datei verarbeitet.
+Das Modul `src/core/watcher.py` ueberwacht den Eingangsordner rekursiv und legt nur fertig geschriebene PDF-Dateien in eine Queue. Die `ProcessingPipeline` in `src/core/pipeline.py` erstellt zuerst ein datiertes Backup (inkl. SHA256-Integritaetscheck), verschiebt die Datei in einen Processing-Ordner und laesst danach die KI-Module laufen: Split-Scan, OCR-Analyse, Kontextabruf und Benennung. Abschliessend wird die Datei in `output/<Jahr>/<Kategorie>/` verschoben, Fehler landen im Error-Ordner.
+
+## Langzeit-Kontext
+
+Der neue `ContextManager` in `src/core/context.py` verwaltet pro Ordner eine `.ai_context.md`. Dieser Kontext wird in der Pipeline in die Namensvergabe eingespeist, um domänenspezifische Regeln zu beruecksichtigen.
+
+## Einstiegspunkt
+
+`src/main.py` initialisiert die Qt-GUI, laedt die Konfiguration, startet den ModelManager und verbindet Watcher, Pipeline sowie GUI-Callbacks. Beim Schliessen werden alle Threads sauber beendet.
 
 ## Intelligence-Module
 

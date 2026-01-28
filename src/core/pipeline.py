@@ -13,6 +13,11 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
+from src.core.context import ContextManager
+from src.intelligence.analyzer import analyze_document
+from src.intelligence.naming import NamingEngine
+from src.intelligence.splitter import scan_for_splits
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +43,10 @@ class ProcessingPipeline(threading.Thread):
         paths = config.get("paths", {})
         self.backup_root = Path(paths.get("backup", "./backup"))
         self.processing_root = Path(paths.get("processing", "./processing"))
+        self.output_root = Path(paths.get("output", "./output"))
+        self.error_root = Path(paths.get("error", "./error"))
+        self.context_manager = ContextManager()
+        self.naming_engine = NamingEngine()
 
     def set_callbacks(self, callbacks: dict[str, Callable]) -> None:
         """Registriert optionale Callback-Funktionen fuer GUI-Events."""
@@ -66,43 +75,82 @@ class ProcessingPipeline(threading.Thread):
         logger.info("Processing-Pipeline gestoppt.")
 
     def _process_file(self, file_path: Path) -> None:
-        """Fuehrt den Backup-First-Schritt und das Verschieben aus."""
+        """Fuehrt den vollstaendigen Workflow fuer eine Datei aus."""
         if not file_path.exists():
             logger.warning("Datei nicht gefunden: %s", file_path)
             self._emit_log(f"Datei nicht gefunden: {file_path}")
             return
 
         start_time = time.time()
-        logger.info("Starte Backup fuer Datei: %s", file_path)
-        self._emit_log(f"Starte Backup fuer Datei: {file_path.name}")
-        self._emit_image(str(file_path))
-        backup_path = self._create_backup(file_path)
-        if backup_path is None:
+        target_path = None
+        try:
+            logger.info("Starte Backup fuer Datei: %s", file_path)
+            self._emit_log(f"Starte Backup fuer Datei: {file_path.name}")
+            self._emit_image(str(file_path))
+            backup_path = self._create_backup(file_path)
+            if backup_path is None:
+                return
+
+            if not self._verify_backup(file_path, backup_path):
+                logger.error("Backup-Integritaet fehlgeschlagen: %s", file_path)
+                self._emit_log(f"Backup-Integritaet fehlgeschlagen: {file_path.name}")
+                return
+
+            logger.info("Backup erfolgreich: %s", backup_path)
+            self._emit_log(f"Backup erfolgreich: {backup_path.name}")
+            target_path = self._move_to_processing(file_path)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Backup-Phase fehlgeschlagen: %s", exc)
+            self._emit_log(f"Backup-Phase fehlgeschlagen: {file_path.name}")
+            self._move_to_error(file_path)
             return
 
-        if not self._verify_backup(file_path, backup_path):
-            logger.error("Backup-Integritaet fehlgeschlagen: %s", file_path)
-            self._emit_log(f"Backup-Integritaet fehlgeschlagen: {file_path.name}")
+        processing_path = target_path or file_path
+        self._emit_log("Aufteilen...")
+        logger.info("Starte Split-Analyse fuer %s", processing_path)
+        try:
+            split_paths = scan_for_splits(str(processing_path))
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Split-Analyse fehlgeschlagen: %s", exc)
+            self._emit_log(f"Split-Analyse fehlgeschlagen: {processing_path.name}")
+            self._move_to_error(processing_path)
             return
 
-        logger.info("Backup erfolgreich: %s", backup_path)
-        self._emit_log(f"Backup erfolgreich: {backup_path.name}")
-        target_path = self._move_to_processing(file_path)
+        if not split_paths:
+            split_paths = [str(processing_path)]
 
-        # Hier wuerde die weitere KI-Verarbeitung starten.
+        for split_index, split_path in enumerate(split_paths, start=1):
+            part_path = Path(split_path)
+            self._emit_log(f"Lesen... ({split_index}/{len(split_paths)})")
+            self._emit_image(str(part_path))
+            try:
+                markdown = analyze_document(str(part_path))
+                context_hint = self.context_manager.get_context(self.output_root)
+                combined_input = markdown
+                if context_hint:
+                    combined_input = f"{markdown}\n\nKontext:\n{context_hint}"
+
+                self._emit_log("Benennen...")
+                suggested_name = self.naming_engine.suggest_name(combined_input)
+                target_path = self._build_target_path(suggested_name)
+                self._emit_log("Verschieben...")
+                final_path = self._move_to_final(part_path, target_path)
+                if final_path:
+                    self._emit_file_processed(str(final_path))
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Verarbeitung fehlgeschlagen: %s", exc)
+                self._emit_log(f"Verarbeitung fehlgeschlagen: {part_path.name}")
+                self._move_to_error(part_path)
+                continue
+
         duration = time.time() - start_time
         logger.info(
-            "Datei bereit fuer Verarbeitung: %s (Dauer: %.2fs)",
+            "Datei verarbeitet: %s (Dauer: %.2fs)",
             file_path.name,
             duration,
         )
         self._emit_overlay([])
-        if target_path is not None:
-            self._emit_file_processed(str(target_path))
-        self._emit_log(
-            f"Datei bereit fuer Verarbeitung: {file_path.name} "
-            f"(Dauer: {duration:.2f}s)"
-        )
+        self._emit_log(f"Verarbeitung abgeschlossen: {file_path.name} ({duration:.2f}s)")
 
     def _create_backup(self, file_path: Path) -> Path | None:
         """Erstellt ein Backup der Datei im datierten Ordner."""
@@ -146,6 +194,50 @@ class ProcessingPipeline(threading.Thread):
         )
         self._emit_log(f"Datei verschoben: {target_path.name}")
         return target_path
+
+    def _build_target_path(self, suggested_name: str) -> Path:
+        """Ermittelt den Zielpfad basierend auf dem Vorschlag."""
+        year = str(date.today().year)
+        suggested_path = Path(suggested_name)
+        category = "Unsortiert"
+
+        if suggested_path.parent != Path("."):
+            category = suggested_path.parent.parts[0]
+
+        filename = suggested_path.name or "dokument.pdf"
+        if not filename.lower().endswith(".pdf"):
+            filename = f"{filename}.pdf"
+
+        return self.output_root / year / category / filename
+
+    def _move_to_final(self, source_path: Path, target_path: Path) -> Path | None:
+        """Verschiebt die Datei in den finalen Zielordner."""
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(str(source_path), str(target_path))
+        except OSError as exc:
+            logger.error("Finales Verschieben fehlgeschlagen (%s): %s", exc, source_path)
+            self._emit_log(f"Finales Verschieben fehlgeschlagen: {source_path.name}")
+            return None
+
+        logger.info("Datei final verschoben nach %s.", target_path)
+        self._emit_log(f"Datei final verschoben: {target_path.name}")
+        return target_path
+
+    def _move_to_error(self, file_path: Path) -> None:
+        """Verschiebt eine Datei in den Fehlerordner."""
+        self.error_root.mkdir(parents=True, exist_ok=True)
+        target_path = self.error_root / file_path.name
+        try:
+            if file_path.exists():
+                shutil.move(str(file_path), str(target_path))
+        except OSError as exc:
+            logger.error("Fehler-Handling fehlgeschlagen (%s): %s", exc, file_path)
+            self._emit_log(f"Fehler-Handling fehlgeschlagen: {file_path.name}")
+            return
+
+        logger.info("Datei in Fehlerordner verschoben: %s", target_path)
+        self._emit_log(f"Datei in Fehlerordner verschoben: {target_path.name}")
 
     @staticmethod
     def _resolve_queue(config: dict):
